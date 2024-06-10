@@ -17,3 +17,13 @@ class Appliance(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    @property
+    def total_power(self):
+        return self.power_rating * self.quantity
+    
+    def power_factor(self):
+        pf= 0.9
+        return pf
+
+
