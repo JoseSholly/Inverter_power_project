@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "power_calculator.apps.PowerCalculatorConfig",
     "rest_framework",
     "api",
+    "calculations",
     
 ]
 
