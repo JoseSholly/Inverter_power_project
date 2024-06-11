@@ -8,16 +8,20 @@ class CalculationCreateView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         appliances_data = request.data.get('appliances', [])
+        backup_time= request.data.get("backup_time",0)
         
         
 
-        total_power_needed = sum(appliance['power_rating'] * appliance['quantity'] for appliance in appliances_data)
+        total_load = sum(appliance['power_rating'] * appliance['quantity'] for appliance in appliances_data)
 
-        inverter_power = total_power_needed * 1.25  # Adding 25% buffer
+         # Calculate Inverter Rating(VA)
+        power_factor = 0.8
+        inverter_rating = total_load / power_factor
 
         calculation_data = {
-            'total_power_needed': total_power_needed,
-            'inverter_power': inverter_power,
+            'total_load': total_load,
+            'inverter_rating': inverter_rating,
+            'backup_time': backup_time,
         }
 
         serializer = self.get_serializer(data=calculation_data)
@@ -26,11 +30,16 @@ class CalculationCreateView(generics.CreateAPIView):
 
         # Add total_load to the response data
         # Calculate total power needed
-        total_load= sum(appliance["power_rating"] for appliance in appliances_data )
+        # total_load= sum(appliance["power_rating"] for appliance in appliances_data )
         response_data = serializer.data
-        response_data['total_load'] = total_load
+        # response_data['total_load'] = total_load
 
-        
+        # calculate battery capacity
+        battery_voltage= 12
+        inverter_eff= 0.8
+        battery_capacity=round((total_load * backup_time) / (battery_voltage * inverter_eff))
+        response_data['battery_capacity'] = battery_capacity
+
 
         return Response(response_data)
 

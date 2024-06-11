@@ -10,4 +10,5 @@ class CalculationForm(forms.ModelForm):
             'name',
             'quantity',
             'power_rating',
+            "backup_time"
         ]

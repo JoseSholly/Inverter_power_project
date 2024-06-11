@@ -31,8 +31,9 @@ import uuid
 class Calculation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
    
-    total_power_needed = models.FloatField(null=False)
-    inverter_power = models.FloatField(null=False)
+    total_load = models.FloatField(null=False)
+    inverter_rating= models.FloatField(null=False)
+    backup_time= models.BigIntegerField(null=False,default=2,  help_text="How many hours of backup you need during a power outage.")
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -44,5 +45,4 @@ class Calculation(models.Model):
         verbose_name_plural = "Calculations"
     def __str__(self) -> str:
         return str(self.id)
-    
 
