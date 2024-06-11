@@ -19,9 +19,8 @@ from rest_framework.routers import DefaultRouter
 from power_calculator import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    
-
+    path('admin/', admin.site.urls, name="admin"),
     path('api/', include('api.urls')), # localhost:8000/api
+    path('api/power_calculator/', include("power_calculator.urls",))
 
 ]

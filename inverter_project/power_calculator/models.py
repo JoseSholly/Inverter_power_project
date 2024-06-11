@@ -30,10 +30,19 @@ import uuid
 
 class Calculation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    timestamp = models.DateTimeField(auto_now_add=True)
-    total_power_needed = models.FloatField()
-    inverter_power = models.FloatField()
+   
+    total_power_needed = models.FloatField(null=False)
+    inverter_power = models.FloatField(null=False)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ['-created']
+        indexes = [
+            models.Index(fields=['-created'])
+        ]
+        verbose_name_plural = "Calculations"
     def __str__(self) -> str:
-        return self.id
+        return str(self.id)
+    
 

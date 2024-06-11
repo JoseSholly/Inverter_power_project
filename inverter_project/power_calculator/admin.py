@@ -1,6 +1,9 @@
 from django.contrib import admin
+from .models import Calculation
 
-# Register your models here.
+class CalculationAdmin(admin.ModelAdmin):
+    list_display = ['id', 'created', 'total_power_needed', 'inverter_power']
+    list_filter = ['created', "updated"]
+    search_fields = ['id']
 
-
-# admin.site.register(Appliance)
+admin.site.register(Calculation, CalculationAdmin)
