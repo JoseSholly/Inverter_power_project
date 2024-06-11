@@ -23,6 +23,5 @@ urlpatterns = [
     
 
     path('api/', include('api.urls')), # localhost:8000/api
-    path("api/calculate/", include('power_calculator.urls')),
 
 ]
