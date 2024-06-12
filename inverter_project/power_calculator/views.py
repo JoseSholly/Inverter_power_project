@@ -39,6 +39,8 @@ class CalculationCreateView(generics.CreateAPIView):
 
         # calculate battery capacity
         battery_voltage= 12
+        response_data['battery_voltage']= battery_voltage
+
         inverter_eff= 0.8
         total_battery_capacity=round((total_load * backup_time) / (battery_voltage * inverter_eff))
         response_data['total_battery_capacity'] = total_battery_capacity
@@ -55,7 +57,17 @@ class CalculationCreateView(generics.CreateAPIView):
         response_data["total_solar_panel_capacity"]= total_solar_panel_capacity
 
 
-        
+        # calculate number of solar panel
+        eff_factor= 0.8
+        total_solar_panel_capacity= total_solar_panel_capacity / 0.8
+
+        solar_panel_wattage= 150
+        numbers_of_solar_panel= ceil(total_solar_panel_capacity / solar_panel_wattage)
+
+        response_data["numbers_of_solar_panel"]= numbers_of_solar_panel
+
+
+
         return Response(response_data)
 
 class CalculationListView(generics.ListAPIView):
