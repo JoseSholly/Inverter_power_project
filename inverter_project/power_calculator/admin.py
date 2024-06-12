@@ -8,7 +8,19 @@ class CalculationItemInline(admin.TabularInline):
     extra = 1
 
 class CalculationAdmin(admin.ModelAdmin):
-    list_display = ['id', 'total_load', 'inverter_rating', 'backup_time', 'battery_capacity', 'created']
+    list_display = ['id',
+                     'total_load',
+                    'inverter_rating',
+                    'backup_time',
+                    'battery_capacity',
+                    'battery_voltage',
+                    'total_battery_capacity',
+                    'numbers_of_batteries',
+                    'total_solar_panel_capacity',
+                    'numbers_of_solar_panel',
+                    'total_current',
+                    'created',
+                    ]
     search_fields = ['id']
     inlines = [CalculationItemInline]
 

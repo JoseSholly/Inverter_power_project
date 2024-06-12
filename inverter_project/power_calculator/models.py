@@ -18,10 +18,26 @@ class Appliance(models.Model):
 
 class Calculation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     total_load = models.FloatField(null=False, default=0)
+
     inverter_rating = models.FloatField(null=False, default=0)
+
     backup_time = models.BigIntegerField(null=False, default=2, help_text="How many hours of backup you need during a power outage.")
     battery_capacity = models.BigIntegerField(null=False, default=150, validators=[validate_battery_capacity])
+
+    battery_voltage= models.BigIntegerField(null=False, default=0)
+
+    total_battery_capacity= models.FloatField(null=False, default=0)
+
+    numbers_of_batteries = models.BigIntegerField(null=False, default=0)
+
+    total_solar_panel_capacity = models.FloatField(null=False, default=0)
+
+    numbers_of_solar_panel= models.BigIntegerField(null=False, default=0)
+    
+    total_current= models.FloatField(null=False, default=0)
+
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
