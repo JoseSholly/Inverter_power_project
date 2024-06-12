@@ -44,12 +44,18 @@ class CalculationCreateView(generics.CreateAPIView):
         response_data['total_battery_capacity'] = total_battery_capacity
 
         # Number of battery required
-        numbers_of_batteries= ceil(total_battery_capacity / battery_capacity)
-        # numbers_of_batteries= ceil(total_battery_capacity / 220)
-    
+        numbers_of_batteries= ceil(total_battery_capacity / battery_capacity) 
         response_data['numbers_of_batteries'] = numbers_of_batteries
-    
 
+
+        # Calculate solar panel capacity
+        total_energy_req_KWH= (total_load * backup_time) / 1000
+        aveage_peak_sun_hour= 5
+        total_solar_panel_capacity= round((total_energy_req_KWH / aveage_peak_sun_hour)  * 1000)
+        response_data["total_solar_panel_capacity"]= total_solar_panel_capacity
+
+
+        
         return Response(response_data)
 
 class CalculationListView(generics.ListAPIView):
