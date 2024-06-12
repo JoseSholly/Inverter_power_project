@@ -1,9 +1,20 @@
 from django.contrib import admin
-from .models import Calculation
+from .models import Calculation, Appliance, CalculationItem
+
+class CalculationItemInline(admin.TabularInline):
+    model = CalculationItem
+    raw_id_fields = ['appliance']
+    fields = ['appliance', 'quantity', 'power_rating']
+    extra = 1
 
 class CalculationAdmin(admin.ModelAdmin):
-    list_display = ['id', 'created', 'total_load', 'inverter_rating']
-    list_filter = ['created', "updated"]
+    list_display = ['id', 'total_load', 'inverter_rating', 'backup_time', 'battery_capacity', 'created']
     search_fields = ['id']
+    inlines = [CalculationItemInline]
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        form.instance.calculate_total_load()
 
 admin.site.register(Calculation, CalculationAdmin)
+admin.site.register(Appliance)
