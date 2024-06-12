@@ -1,0 +1,8 @@
+from django.core.exceptions import ValidationError
+
+
+def validate_battery_capacity(value):
+    if value < 150 or value > 230:
+        raise ValidationError("Battery capacity must be between 150 and 220.")
+    else:
+        return value
