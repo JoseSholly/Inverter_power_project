@@ -2,6 +2,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from .models import Calculation
 from .serializers import CalculationSerializer
+from math import ceil
 
 class CalculationCreateView(generics.CreateAPIView):
     serializer_class = CalculationSerializer
@@ -9,6 +10,7 @@ class CalculationCreateView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         appliances_data = request.data.get('appliances', [])
         backup_time= request.data.get("backup_time",0)
+        battery_capacity= request.data.get("battery_capacity",0)
         
         
 
@@ -22,6 +24,7 @@ class CalculationCreateView(generics.CreateAPIView):
             'total_load': total_load,
             'inverter_rating': inverter_rating,
             'backup_time': backup_time,
+            'battery_capacity': battery_capacity
         }
 
         serializer = self.get_serializer(data=calculation_data)
@@ -37,9 +40,15 @@ class CalculationCreateView(generics.CreateAPIView):
         # calculate battery capacity
         battery_voltage= 12
         inverter_eff= 0.8
-        battery_capacity=round((total_load * backup_time) / (battery_voltage * inverter_eff))
-        response_data['battery_capacity'] = battery_capacity
+        total_battery_capacity=round((total_load * backup_time) / (battery_voltage * inverter_eff))
+        response_data['total_battery_capacity'] = total_battery_capacity
 
+        # Number of battery required
+        numbers_of_batteries= ceil(total_battery_capacity / battery_capacity)
+        # numbers_of_batteries= ceil(total_battery_capacity / 220)
+    
+        response_data['numbers_of_batteries'] = numbers_of_batteries
+    
 
         return Response(response_data)
 
