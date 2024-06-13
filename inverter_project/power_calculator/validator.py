@@ -9,6 +9,8 @@ def validate_battery_capacity(value):
 
 def validate_power_rating(value):
     if value<1:
-        raise ValidationError("Battery capacity must be between 150 and 220.")
+        raise ValidationError("Power capacity must be greater than 1")
     else:
         return value
+
+    

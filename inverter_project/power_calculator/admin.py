@@ -27,6 +27,7 @@ class CalculationAdmin(admin.ModelAdmin):
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
         form.instance.calculate_total_load()
+        form.instance.calculate_total_battery_capacity()
 
 admin.site.register(Calculation, CalculationAdmin)
 admin.site.register(Appliance)
