@@ -2,6 +2,7 @@ from django.db import models
 from .validator import validate_battery_capacity, validate_power_rating
 import uuid
 from math import ceil
+import sympy as sp
 # Define the voltage choices
 BATTERY_VOLTAGE_CHOICES = [
         (12, '12V'),
@@ -40,9 +41,9 @@ class Appliance(models.Model):
 class Calculation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    total_load = models.FloatField(null=False, default=0)
+    total_load = models.FloatField(default=0, editable= False)
 
-    inverter_rating = models.FloatField(null=False, default=0)
+    inverter_rating = models.FloatField(editable=False, default=0)
 
     backup_time = models.BigIntegerField(null=False, default=2, help_text="How many hours of backup you need during a power outage.")
 
@@ -50,17 +51,17 @@ class Calculation(models.Model):
 
     battery_voltage= models.IntegerField(null=False, default=0, choices=BATTERY_VOLTAGE_CHOICES)
 
-    total_battery_capacity= models.FloatField(null=False, default=0)
+    total_battery_capacity= models.FloatField(editable=False, default=0)
 
-    numbers_of_batteries = models.BigIntegerField(null=False, default=0)
+    numbers_of_batteries = models.BigIntegerField(editable=False, default=0)
 
-    total_solar_panel_capacity = models.FloatField(null=False, default=0)
+    total_solar_panel_capacity_needed = models.FloatField(editable=False, default=0)
 
     solar_panel_watt= models.IntegerField(null=False, default=300, choices=SOLAR_PANEL_WATT)
 
-    numbers_of_solar_panel= models.BigIntegerField(null=False, default=0)
+    numbers_of_solar_panel= models.IntegerField(editable=False, default=0)
     
-    total_current= models.FloatField(null=False, default=0)
+    total_current= models.FloatField(editable=False, default=0)
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -103,19 +104,38 @@ class Calculation(models.Model):
         self.save()
         return numbers_of_battery
     
-    def calculate_solar_panel_capacity(self):
+    def calculate_solar_panel_capacity_needed(self):
         total_energy_req_KWH= (self.total_load * self.backup_time) / 1000
         aveage_peak_sun_hour= 5
         total_solar_panel_capacity= round((total_energy_req_KWH / aveage_peak_sun_hour)  * 1000)
         # Adjusting Total solar capacity for system loss: Diving total panel cap by inverter efficiency
         inverter_eff= 0.8
         adj_total_solar_panel_capacity= total_solar_panel_capacity / inverter_eff
-        self.total_solar_panel_capacity= adj_total_solar_panel_capacity
+        self.total_solar_panel_capacity_needed= adj_total_solar_panel_capacity
         self.save()
         return adj_total_solar_panel_capacity
+
+    def get_no_panel(self,required_capacity, panel_capacity):
+        """
+        Function solve the inequality equation to get number greater than needed solar capacity
+        """
+        x = sp.symbols('x')
+        inequality= x * panel_capacity > required_capacity
+        solution= sp.solve(inequality, x)
+    
+        if solution:
+            solution= solution.args[0]
+            solution= solution.lhs.evalf()
+        else:
+            # Handle case where no solution found (though should not typically occur)
+            solution = 0
+        return solution
     
     def calculate_no_of_panel(self):
-        numbers_of_solar_panel= ceil(self.total_solar_panel_capacity /self.solar_panel_watt)
+        numbers_of_solar_panel= self.get_no_panel(required_capacity=self.total_solar_panel_capacity_needed, panel_capacity=self.solar_panel_watt)
+
+        numbers_of_solar_panel= round(ceil(numbers_of_solar_panel))
+
         self.numbers_of_solar_panel = numbers_of_solar_panel
         self.save()
         return numbers_of_solar_panel
@@ -126,6 +146,7 @@ class Calculation(models.Model):
          The charge controller should be able to handle the total current produced by the solar panels. It's also advisable to add a safety margin of around 25%.
         """
         total_current= (total_solar_panel_wattage / self.battery_voltage) * 1.25 # Add buffer
+        self.total_current= total_current
         self.save()
         return total_current
 

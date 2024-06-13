@@ -15,11 +15,20 @@ class CalculationAdmin(admin.ModelAdmin):
                     'battery_capacity',
                     'total_battery_capacity',
                     'numbers_of_batteries',
-                    'total_solar_panel_capacity',
+                    'total_solar_panel_capacity_needed',
                     'numbers_of_solar_panel',
                     'total_current',
                     'created',
                     ]
+    readonly_fields= [
+        'total_load',
+        'inverter_rating',
+        'total_battery_capacity',
+        'numbers_of_batteries',
+        'total_solar_panel_capacity_needed',
+        'numbers_of_solar_panel',
+        'total_current',
+    ]
     search_fields = ['id']
     inlines = [CalculationItemInline]
 
@@ -29,7 +38,7 @@ class CalculationAdmin(admin.ModelAdmin):
         form.instance.calculate_total_inverter_rating()
         form.instance.calculate_total_battery_capacity()
         form.instance.calculate_no_of_battery()
-        form.instance.calculate_solar_panel_capacity()
+        form.instance.calculate_solar_panel_capacity_needed()
         form.instance.calculate_no_of_panel()
         form.instance.calculate_total_current()
 
