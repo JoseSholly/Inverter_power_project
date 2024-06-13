@@ -27,7 +27,7 @@ class CalculationSerializer(serializers.ModelSerializer):
         model = Calculation
         fields = [
             'id', 'total_load', 'inverter_rating', 'backup_time', 'battery_capacity', 
-            'battery_voltage', 'total_battery_capacity', 'numbers_of_batteries', 
+            'system_voltage', 'total_battery_capacity', 'numbers_of_batteries', 
             'total_solar_panel_capacity_needed', 'solar_panel_watt', 'numbers_of_solar_panel', 
             'total_current', 'created', 'updated', 'calc'
         ]
