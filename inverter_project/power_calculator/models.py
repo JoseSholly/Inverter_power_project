@@ -146,6 +146,7 @@ class Calculation(models.Model):
          The charge controller should be able to handle the total current produced by the solar panels. It's also advisable to add a safety margin of around 25%.
         """
         total_current= (total_solar_panel_wattage / self.battery_voltage) * 1.25 # Add buffer
+        total_current = round(total_current, 2)
         self.total_current= total_current
         self.save()
         return total_current
