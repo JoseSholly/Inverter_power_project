@@ -67,9 +67,15 @@ class Calculation(models.Model):
     def calculate_total_load(self):
         total_load = sum(item.power_rating * item.quantity for item in self.calc.all())
         self.total_load = total_load
-        pf= 0.8 #Power factor
-        self.inverter_rating = total_load / pf  
         self.save()
+        return total_load
+    
+    def calculate_total_inverter_rating(self):
+        pf= 0.8 #Power factor
+        inverter_rating = self.total_load / pf  
+        self.inverter_rating= inverter_rating
+        self.save()
+        return inverter_rating
 
     def calculate_total_battery_capacity(self):
         inverter_eff= 0.8
@@ -85,7 +91,18 @@ class Calculation(models.Model):
         self.numbers_of_batteries= numbers_of_battery
         self.save()
     
-    
+    def calculate_solar_panel_capacity(self):
+        total_energy_req_KWH= (self.total_load * self.backup_time) / 1000
+        aveage_peak_sun_hour= 5
+        total_solar_panel_capacity= round((total_energy_req_KWH / aveage_peak_sun_hour)  * 1000)
+        self.total_solar_panel_capacity= total_solar_panel_capacity
+        self.save()
+
+
+
+
+
+
 class CalculationItem(models.Model):
     calculation = models.ForeignKey(Calculation, related_name='calc', on_delete=models.CASCADE)
     appliance = models.ForeignKey(Appliance, related_name='items', on_delete=models.CASCADE)
