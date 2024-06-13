@@ -90,13 +90,18 @@ class Calculation(models.Model):
         numbers_of_battery= ceil(tot_bat_cap / self.battery_capacity)
         self.numbers_of_batteries= numbers_of_battery
         self.save()
+        return numbers_of_battery
     
     def calculate_solar_panel_capacity(self):
         total_energy_req_KWH= (self.total_load * self.backup_time) / 1000
         aveage_peak_sun_hour= 5
         total_solar_panel_capacity= round((total_energy_req_KWH / aveage_peak_sun_hour)  * 1000)
-        self.total_solar_panel_capacity= total_solar_panel_capacity
+        # Adjusting Total solar capacity for system loss: Diving total panel cap by inverter efficiency
+        inverter_eff= 0.8
+        adj_total_solar_panel_capacity= total_solar_panel_capacity / inverter_eff
+        self.total_solar_panel_capacity= adj_total_solar_panel_capacity
         self.save()
+        return adj_total_solar_panel_capacity
 
 
 
