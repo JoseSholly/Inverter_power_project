@@ -15,6 +15,14 @@ BATTERY_CAPACITY_CHOICES = [
         (220, '220Ah'),
         (250, '250Ah'),
     ]
+
+SOLAR_PANEL_WATT= [
+    (300, '300W'),
+    (350, '350W'),
+    (400, '400W'),
+    (450, '450W'),
+]
+
 class Appliance(models.Model):
     name = models.CharField(max_length=100, null=False)
     created = models.DateTimeField(auto_now_add=True)
@@ -37,6 +45,7 @@ class Calculation(models.Model):
     inverter_rating = models.FloatField(null=False, default=0)
 
     backup_time = models.BigIntegerField(null=False, default=2, help_text="How many hours of backup you need during a power outage.")
+
     battery_capacity = models.BigIntegerField(null=False, default=150, validators=[validate_battery_capacity], choices=BATTERY_CAPACITY_CHOICES)
 
     battery_voltage= models.IntegerField(null=False, default=0, choices=BATTERY_VOLTAGE_CHOICES)
@@ -46,6 +55,8 @@ class Calculation(models.Model):
     numbers_of_batteries = models.BigIntegerField(null=False, default=0)
 
     total_solar_panel_capacity = models.FloatField(null=False, default=0)
+
+    solar_panel_watt= models.IntegerField(null=False, default=300, choices=SOLAR_PANEL_WATT)
 
     numbers_of_solar_panel= models.BigIntegerField(null=False, default=0)
     
@@ -102,6 +113,12 @@ class Calculation(models.Model):
         self.total_solar_panel_capacity= adj_total_solar_panel_capacity
         self.save()
         return adj_total_solar_panel_capacity
+    
+    def calculate_no_of_panel(self):
+        numbers_of_solar_panel= ceil(self.total_solar_panel_capacity /self.solar_panel_watt)
+        self.numbers_of_solar_panel = numbers_of_solar_panel
+        self.save()
+        return numbers_of_solar_panel
 
 
 
