@@ -5,3 +5,8 @@ from .serializers import CalculationSerializer
 class CalculationCreateView(generics.CreateAPIView):
     queryset = Calculation.objects.all()
     serializer_class = CalculationSerializer
+
+
+class CalculationsListView(generics.ListAPIView):
+    queryset= Calculation.objects.all()
+    serializer_class= CalculationSerializer
