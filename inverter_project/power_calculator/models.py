@@ -1,6 +1,7 @@
 from django.db import models
 from .validator import validate_battery_capacity, validate_power_rating
 import uuid
+from math import ceil
 # Define the voltage choices
 BATTERY_VOLTAGE_CHOICES = [
         (12, '12V'),
@@ -75,7 +76,16 @@ class Calculation(models.Model):
         total_battery_capacity= round( (self.total_load * self.backup_time) / (self.battery_voltage * inverter_eff) )
         self.total_battery_capacity= total_battery_capacity
         self.save()
-
+        return total_battery_capacity
+    
+    def calculate_no_of_battery(self):
+        # tot_bat_cap= self.calculate_total_battery_capacity()
+        tot_bat_cap= self.total_battery_capacity
+        numbers_of_battery= ceil(tot_bat_cap / self.battery_capacity)
+        self.numbers_of_batteries= numbers_of_battery
+        self.save()
+    
+    
 class CalculationItem(models.Model):
     calculation = models.ForeignKey(Calculation, related_name='calc', on_delete=models.CASCADE)
     appliance = models.ForeignKey(Appliance, related_name='items', on_delete=models.CASCADE)
