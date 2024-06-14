@@ -10,3 +10,7 @@ class CalculationCreateView(generics.CreateAPIView):
 class CalculationsListView(generics.ListAPIView):
     queryset= Calculation.objects.all()
     serializer_class= CalculationSerializer
+
+class CalculationUpdateView(generics.UpdateAPIView):
+    queryset = Calculation.objects.all()
+    serializer_class = CalculationSerializer

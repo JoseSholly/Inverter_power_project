@@ -49,3 +49,37 @@ class CalculationSerializer(serializers.ModelSerializer):
         calculation.calculate_total_current()
         
         return calculation
+    def update(self, instance, validated_data):
+        calc_items_data = validated_data.pop('calc')
+        
+        instance.backup_time = validated_data.get('backup_time', instance.backup_time)
+        instance.battery_capacity = validated_data.get('battery_capacity', instance.battery_capacity)
+        instance.system_voltage = validated_data.get('system_voltage', instance.system_voltage)
+        instance.solar_panel_watt = validated_data.get('solar_panel_watt', instance.solar_panel_watt)
+        instance.save()
+
+        # Update or create calculation items
+        for item_data in calc_items_data:
+            appliance_data = item_data.pop('appliance')
+            appliance, created = Appliance.objects.get_or_create(**appliance_data)
+            
+            item_id = item_data.get('id')
+            if item_id:
+                calculation_item = CalculationItem.objects.get(id=item_id, calculation=instance)
+                calculation_item.quantity = item_data.get('quantity', calculation_item.quantity)
+                calculation_item.power_rating = item_data.get('power_rating', calculation_item.power_rating)
+                calculation_item.appliance = appliance
+                calculation_item.save()
+            else:
+                CalculationItem.objects.create(calculation=instance, appliance=appliance, **item_data)
+
+        # Recalculate fields
+        instance.calculate_total_load()
+        instance.calculate_total_inverter_rating()
+        instance.calculate_total_battery_capacity()
+        instance.calculate_no_of_battery()
+        instance.calculate_solar_panel_capacity_needed()
+        instance.calculate_no_of_panel()
+        instance.calculate_total_current()
+        
+        return instance

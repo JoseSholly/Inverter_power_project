@@ -101,7 +101,10 @@ class Calculation(models.Model):
          Determines the total battery capacity needed considering the adjusted total load, backup time, system voltage, and inverter efficiency.
         """
         inverter_eff= 0.8
-        total_battery_capacity= round( (self.total_load * self.backup_time) / (self.system_voltage * inverter_eff) , 2)
+        total_battery_capacity= (self.total_load * self.backup_time) / (self.system_voltage * inverter_eff)
+        
+        total_battery_capacity= round(total_battery_capacity, 2)
+        print(f"Total bat cap: {total_battery_capacity}")
         self.total_battery_capacity= total_battery_capacity
         self.save()
         return total_battery_capacity
@@ -175,9 +178,9 @@ class Calculation(models.Model):
 
          The charge controller should be able to handle the total current produced by the solar panels. It's also advisable to add a safety margin of around 25%.
         """
-        total_current= (total_solar_panel_wattage / self.system_voltage) * 1.25 # Add buffer
-        total_current = round(total_current, 2)
-        print(f"Total Current: {total_current}")
+        total_current= round(total_solar_panel_wattage / self.system_voltage, 2) 
+        
+        # print(f"Total Current: {total_current}")
         self.total_current= total_current
         self.save()
         return total_current
