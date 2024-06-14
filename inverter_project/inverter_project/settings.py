@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "api",
     "rest_framework_swagger",
-    "drf_yasg",
+    # 'django.contrib.staticfiles',  # required for serving swagger ui's css/js files
+   'drf_yasg',
     
 ]
 
@@ -76,6 +77,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = 'inverter_project.wsgi.application'
 
@@ -131,3 +133,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
