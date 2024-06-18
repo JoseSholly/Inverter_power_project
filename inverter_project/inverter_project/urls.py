@@ -43,9 +43,9 @@ urlpatterns = [
     path("api-schema/", get_restframe_work_schema(title="API Schema", description="Guide for the REST API"), name="api_schema"),
    path('api/docs/swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
    path('api/docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-   path('api/redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+   path('api/redocs/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('admin/', admin.site.urls, name="admin"),
-    path('api/', include('api.urls')), # localhost:8000/api
-    path('api/power_calculator/', include("power_calculator.urls",))
+    # path('api/', include('api.urls')), # localhost:8000/api
+    path('api/v1/power_calculator/', include("power_calculator.urls",))
 
 ]
