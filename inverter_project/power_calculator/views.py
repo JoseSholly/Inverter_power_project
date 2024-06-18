@@ -11,17 +11,14 @@ class CalculationCreateView(generics.CreateAPIView):
 class CalculationsListView(generics.ListAPIView):
     queryset= Calculation.objects.all()
     serializer_class= CalculationSerializer
-    permission_classes = [IsStaffUser]
 
 class CalculationUpdateView(generics.UpdateAPIView):
     queryset = Calculation.objects.all()
     serializer_class = CalculationSerializer
-    permission_classes = [IsStaffUser]
 
 class CalculationDeleteView(generics.DestroyAPIView):
     queryset = Calculation.objects.all()
     serializer_class = CalculationSerializer
-    permission_classes = [IsStaffUser]
 
     def destroy(self, request, *args, **kwargs):
         
