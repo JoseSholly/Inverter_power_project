@@ -4,7 +4,7 @@ from .models import Appliance, Calculation, CalculationItem
 class ApplianceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appliance
-        fields = ['id', 'name', 'created']
+        fields = ['id', 'name']
 
 class CalculationItemSerializer(serializers.ModelSerializer):
     appliance = ApplianceSerializer()
@@ -40,17 +40,11 @@ class CalculationSerializer(serializers.ModelSerializer):
             appliance, created = Appliance.objects.get_or_create(**appliance_data)
             CalculationItem.objects.create(calculation=calculation, appliance=appliance, **item_data)
         
-        calculation.calculate_total_load()
-        calculation.calculate_total_inverter_rating()
-        calculation.calculate_total_battery_capacity()
-        calculation.calculate_no_of_battery()
-        calculation.calculate_solar_panel_capacity_needed()
-        calculation.calculate_no_of_panel()
-        calculation.calculate_total_current()
-        
+        self._recalculate(calculation)
         return calculation
+   
     def update(self, instance, validated_data):
-        calc_items_data = validated_data.pop('calc')
+        calc_items_data = validated_data.pop('calc', [])
         
         instance.backup_time = validated_data.get('backup_time', instance.backup_time)
         instance.battery_capacity = validated_data.get('battery_capacity', instance.battery_capacity)
@@ -59,6 +53,14 @@ class CalculationSerializer(serializers.ModelSerializer):
         instance.save()
 
         # Update or create calculation items
+        existing_item_ids = [item.id for item in instance.calc.all()]
+        new_item_ids = [item_data.get('id') for item_data in calc_items_data if item_data.get('id')]
+
+        # Delete items that are not in the new data
+        for item_id in existing_item_ids:
+            if item_id not in new_item_ids:
+                CalculationItem.objects.get(id=item_id).delete()
+
         for item_data in calc_items_data:
             appliance_data = item_data.pop('appliance')
             appliance, created = Appliance.objects.get_or_create(**appliance_data)
@@ -74,12 +76,14 @@ class CalculationSerializer(serializers.ModelSerializer):
                 CalculationItem.objects.create(calculation=instance, appliance=appliance, **item_data)
 
         # Recalculate fields
-        instance.calculate_total_load()
-        instance.calculate_total_inverter_rating()
-        instance.calculate_total_battery_capacity()
-        instance.calculate_no_of_battery()
-        instance.calculate_solar_panel_capacity_needed()
-        instance.calculate_no_of_panel()
-        instance.calculate_total_current()
-        
+        self._recalculate(instance)
         return instance
+        
+    def _recalculate(self, calculation):
+        calculation.calculate_total_load()
+        calculation.calculate_total_inverter_rating()
+        calculation.calculate_total_battery_capacity()
+        calculation.calculate_no_of_battery()
+        calculation.calculate_solar_panel_capacity_needed()
+        calculation.calculate_no_of_panel()
+        calculation.calculate_total_current()
