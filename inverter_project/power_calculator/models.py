@@ -104,7 +104,7 @@ class Calculation(models.Model):
         total_battery_capacity= (self.total_load * self.backup_time) / (self.system_voltage * inverter_eff)
         
         total_battery_capacity= round(total_battery_capacity, 2)
-        print(f"Total bat cap: {total_battery_capacity}")
+        # print(f"Total bat cap: {total_battery_capacity}")
         self.total_battery_capacity= total_battery_capacity
         self.save()
         return total_battery_capacity
