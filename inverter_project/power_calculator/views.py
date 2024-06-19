@@ -1,6 +1,6 @@
 from rest_framework import generics
-from .models import Calculation
-from .serializers import CalculationSerializer
+from .models import Calculation, Appliance
+from .serializers import CalculationSerializer, ApplianceSerializer
 from rest_framework.response import Response
 from .permissions import IsStaffUser
 
@@ -27,4 +27,9 @@ class CalculationDeleteView(generics.DestroyAPIView):
         calculation_id = instance.id
         self.perform_destroy(instance)
         return Response({"message": f"Calculation {calculation_id} deleted successfully"})
+    
+
+class AppliancesListView(generics.ListAPIView):
+    queryset= Appliance.objects.all()
+    serializer_class= ApplianceSerializer
 
