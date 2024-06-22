@@ -1,5 +1,5 @@
 from django.db import models
-from .validator import validate_battery_capacity, validate_power_rating
+from .validator import validate_battery_capacity, validate_power_rating, validate_backup_time
 import uuid
 from math import ceil
 import sympy as sp
@@ -45,7 +45,7 @@ class Calculation(models.Model):
 
     inverter_rating = models.FloatField(editable=False, default=0)
 
-    backup_time = models.BigIntegerField(null=False, default=2, help_text="How many hours of backup you need during a power outage.")
+    backup_time = models.BigIntegerField(null=False, default=2, help_text="How many hours of backup you need during a power outage.", validators= [validate_backup_time])
 
     battery_capacity = models.BigIntegerField(null=False, default=150, validators=[validate_battery_capacity], choices=BATTERY_CAPACITY_CHOICES)
 
