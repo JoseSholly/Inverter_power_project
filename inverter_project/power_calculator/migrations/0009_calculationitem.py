@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
-import power_calculator.validator
+import power_calculator.validators
 
 
 class Migration(migrations.Migration):
@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                 ('total_load', models.FloatField(default=0)),
                 ('inverter_rating', models.FloatField(default=0)),
                 ('backup_time', models.BigIntegerField(default=2, help_text='How many hours of backup you need during a power outage.')),
-                ('battery_capacity', models.BigIntegerField(default=150, validators=[power_calculator.validator.validate_battery_capacity])),
+                ('battery_capacity', models.BigIntegerField(default=150, validators=[power_calculator.validators.validate_battery_capacity])),
                 ('appliance', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='power_calculator.appliance')),
                 ('calculation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='calc', to='power_calculator.calculation')),
             ],

@@ -45,19 +45,19 @@ class Calculation(models.Model):
 
     inverter_rating = models.FloatField(editable=False, default=0)
 
-    backup_time = models.BigIntegerField(null=False, default=2, help_text="How many hours of backup you need during a power outage.", validators= [validate_backup_time])
+    backup_time = models.PositiveIntegerField(null=False, default=2, help_text="How many hours of backup you need during a power outage.", validators= [validate_backup_time])
 
-    battery_capacity = models.BigIntegerField(null=False, default=150, validators=[validate_battery_capacity], choices=BATTERY_CAPACITY_CHOICES)
+    battery_capacity = models.PositiveIntegerField(null=False, default=150, validators=[validate_battery_capacity], choices=BATTERY_CAPACITY_CHOICES)
 
-    system_voltage= models.IntegerField(null=False, default=0, choices=BATTERY_VOLTAGE_CHOICES)
+    system_voltage= models.PositiveIntegerField(null=False, default=0, choices=BATTERY_VOLTAGE_CHOICES)
 
     total_battery_capacity= models.FloatField(editable=False, default=0)
 
-    numbers_of_batteries = models.BigIntegerField(editable=False, default=0)
+    numbers_of_batteries = models.PositiveIntegerField(editable=False, default=0)
 
     total_solar_panel_capacity_needed = models.FloatField(editable=False, default=0)
 
-    solar_panel_watt= models.IntegerField(null=False, default=300, choices=SOLAR_PANEL_WATT)
+    solar_panel_watt= models.PositiveIntegerField(null=False, default=300, choices=SOLAR_PANEL_WATT)
 
     numbers_of_solar_panel= models.IntegerField(editable=False, default=0)
     
