@@ -17,7 +17,7 @@ database_url= os.getenv("DATABASE_URL")
 DATABASES["default"] = dj_database_url.parse(database_url)
 
  
-CSRF_TRUSTED_ORIGINS= os.getenv("CSRF_TRUSTED_ORIGINS")
+CSRF_TRUSTED_ORIGINS= os.getenv("CSRF_TRUSTED_ORIGINS").split(",")
 
 if not DEBUG:
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
