@@ -87,12 +87,12 @@ class Calculation(models.Model):
     
     def calculate_total_inverter_rating(self):
         """
-        Calculates the required inverter rating based on the total load and a power factor (0.8).
+        Calculates the required inverter rating based on the total load and a power factor (0.8) rated in kVA.
         """
 
         pf= 0.8 #Power factor
         inverter_rating = self.total_load / pf  
-        self.inverter_rating= inverter_rating
+        self.inverter_rating= inverter_rating / 1000
         self.save()
         return inverter_rating
 
