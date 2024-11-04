@@ -3,7 +3,7 @@ from .common import *
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-DEBUG= False
+DEBUG= os.getenv("DEBUG_VALUE")
 
 ALLOWED_HOSTS=['127.0.0.1', 'localhost']
 
