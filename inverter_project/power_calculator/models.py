@@ -134,7 +134,7 @@ class Calculation(models.Model):
          Estimates the total solar panel capacity needed to meet energy requirements, considering average peak sun hours and inverter efficiency.
         """
         total_energy_req_KWH= (self.total_load * self.backup_time) / 1000
-        aveage_peak_sun_hour= 5
+        aveage_peak_sun_hour= 6
         total_solar_panel_capacity= round((total_energy_req_KWH / aveage_peak_sun_hour)  * 1000)
         # Adjusting Total solar capacity for system loss: Diving total panel cap by inverter efficiency
         inverter_eff= 0.8
