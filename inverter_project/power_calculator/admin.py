@@ -34,9 +34,13 @@ class CalculationAdmin(admin.ModelAdmin):
 
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
-        
-        # Perform all calculations in a batch and save once
-        form.instance.perform_calculations()
+        form.instance.calculate_total_load()
+        form.instance.calculate_total_inverter_rating()
+        form.instance.calculate_total_battery_capacity()
+        form.instance.calculate_no_of_battery()
+        form.instance.calculate_solar_panel_capacity_needed()
+        form.instance.calculate_no_of_panel()
+        form.instance.calculate_total_current()
 
 admin.site.register(Calculation, CalculationAdmin)
 admin.site.register(Appliance)

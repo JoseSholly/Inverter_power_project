@@ -80,4 +80,10 @@ class CalculationSerializer(serializers.ModelSerializer):
         return instance
         
     def _recalculate(self, calculation):
-        calculation.perform_calculations()
+        calculation.calculate_total_load()
+        calculation.calculate_total_inverter_rating()
+        calculation.calculate_total_battery_capacity()
+        calculation.calculate_no_of_battery()
+        calculation.calculate_solar_panel_capacity_needed()
+        calculation.calculate_no_of_panel()
+        calculation.calculate_total_current()
