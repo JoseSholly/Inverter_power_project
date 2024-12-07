@@ -62,6 +62,16 @@ class ApplianceCalculationUtility:
         total_solar_cap = adjusted_solar_cap / peak_sun_hours
         return total_solar_cap
     
+    @property
+    def number_of_panels(self):
+        total_solar_cap = self.total_solar_capacity
+
+        no_of_panels = total_solar_cap / self.solar_panel_watt
+
+        no_of_panels = ceil(no_of_panels)
+
+        return no_of_panels
+    
 
     def perform_all_calculations(self):
         self.total_load
