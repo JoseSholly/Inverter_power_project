@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 
     # apps
     "power_calculator.apps.PowerCalculatorConfig",
+    "inverter_rating_v2",
     "rest_framework",
     "api",
     "rest_framework_swagger",
