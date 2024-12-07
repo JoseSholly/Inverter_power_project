@@ -43,12 +43,22 @@ class ApplianceCalculationUtility:
 
         return total_battery_cap
     
+    @property
+    def number_of_batteries(self):
+        """
+        Returns the numbers  of batteries required depending on battery capacity selected 
+        """
+        total_battery_cap = self.total_battery_cap_required
+        number_batteries = total_battery_cap / self.battery_capacity
+        number_batteries = ceil(number_batteries)
 
-
+        return number_batteries
+    
 
     def perform_all_calculations(self):
         self.total_load
         self.total_inverter_rating
         self.total_battery_cap_required
+        self.number_of_batteries
 
     
