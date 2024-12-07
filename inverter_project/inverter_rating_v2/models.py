@@ -78,6 +78,7 @@ class Calculation(models.Model):
         calculation.perform_all_calculations()
 
         self.total_load = calculation.total_load
+        self.inverter_rating = calculation.total_inverter_rating
 
         self.save()
 
