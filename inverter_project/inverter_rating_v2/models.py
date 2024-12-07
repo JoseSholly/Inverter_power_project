@@ -2,7 +2,7 @@ from django.db import models
 import uuid
 from power_calculator.models import Appliance
 from .validators import validate_backup_time, validate_battery_capacity, validate_power_rating
-
+from .utils import ApplianceCalculationUtility
 # Create your models here.
 # Define the voltage choices
 BATTERY_VOLTAGE_CHOICES = [
@@ -42,6 +42,10 @@ class Calculation(models.Model):
 
     total_battery_capacity= models.FloatField(editable=False, default=0)
 
+    numbers_of_batteries= models.IntegerField(editable=False, default=0)
+
+    total_solar_panel_capacity_needed = models.IntegerField(editable=False, default=0)
+
     numbers_of_solar_panel= models.IntegerField(editable=False, default=0)
 
     controller_current= models.IntegerField(editable=False, default=0)
@@ -61,13 +65,40 @@ class Calculation(models.Model):
     def __str__(self):
         return str(self.id)
     
+    def perform_calculation(self):
+        items = self.appliance_calc.all()
+
+        calculation = ApplianceCalculationUtility(
+            items= items,
+            battery_capacity=self.battery_capacity,
+            system_voltage=self.system_voltage,
+            solar_panel_watt=self.solar_panel_watt,
+        )
+
+        calculation.perform_all_calculations()
+
+        self.total_load = calculation.total_load
+
+        self.save()
+
+    
 
 class CalculationItem(models.Model):
-    calculation = models.ForeignKey(Calculation, related_name='system_calc', on_delete=models.CASCADE)
+    calculation = models.ForeignKey(Calculation, related_name='appliance_calc', on_delete=models.CASCADE)
     appliance = models.ForeignKey(Appliance, related_name='appliance', on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=0)
     power_rating = models.PositiveIntegerField(default=0, validators= [validate_power_rating])
-    backup_time = models.PositiveIntegerField(default=0, validators= [validate_backup_time])
+    backup_time = models.FloatField(default=0, validators= [validate_backup_time])
 
     def __str__(self) -> str:
         return f'{self.appliance.name}: ({self.quantity} x {self.power_rating} x {self.backup_time} WH)'
+    
+
+    def total_power_consumption(self):
+        total_power_consumption = self.power_rating * self.quantity
+        return total_power_consumption
+    
+    def total_energy_consumption(self):
+        total_energy_consumption = self.quantity * self.power_rating * self.backup_time
+        return total_energy_consumption
+
