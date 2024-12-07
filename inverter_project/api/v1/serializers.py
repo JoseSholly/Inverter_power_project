@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Appliance, Calculation, CalculationItem
+from power_calculator.models import Appliance, Calculation, CalculationItem
 
 class ApplianceSerializer(serializers.ModelSerializer):
     class Meta:

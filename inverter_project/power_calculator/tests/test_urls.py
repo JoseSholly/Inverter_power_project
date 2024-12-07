@@ -1,6 +1,6 @@
 from django.test import SimpleTestCase
 from django.urls import reverse, resolve
-from api.views import AppliancesListView, CalculationsListView, CalculationCreateView, CalculationUpdateView, CalculationDeleteView
+from inverter_project.api.v1.views import AppliancesListView, CalculationsListView, CalculationCreateView, CalculationUpdateView, CalculationDeleteView
 import uuid
 class TestUrls(SimpleTestCase):
     def test_appliances_list(self):

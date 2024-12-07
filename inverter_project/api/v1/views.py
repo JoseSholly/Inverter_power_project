@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view
 
 from rest_framework import generics
 from power_calculator.models import Calculation, Appliance
-from power_calculator.serializers import CalculationSerializer, ApplianceSerializer
+from .serializers import CalculationSerializer, ApplianceSerializer
 from rest_framework.response import Response
 from power_calculator.permissions import IsStaffUser
 
