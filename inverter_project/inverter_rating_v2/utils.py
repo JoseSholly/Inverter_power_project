@@ -72,6 +72,15 @@ class ApplianceCalculationUtility:
 
         return no_of_panels
     
+    @property
+    def current(self):
+        total_solar_cap = self.total_solar_capacity
+
+        current = (total_solar_cap  * 1.25) / self.system_voltage
+
+        return current
+        
+
 
     def perform_all_calculations(self):
         self.total_load
@@ -79,5 +88,6 @@ class ApplianceCalculationUtility:
         self.total_battery_cap_required
         self.number_of_batteries
         self.total_solar_capacity
+        self.current
 
     
