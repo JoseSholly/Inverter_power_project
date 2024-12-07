@@ -81,6 +81,7 @@ class Calculation(models.Model):
         self.inverter_rating = calculation.total_inverter_rating
         self.total_battery_capacity = calculation.total_battery_cap_required
         self.numbers_of_batteries = calculation.number_of_batteries
+        self.total_solar_panel_capacity_needed = calculation.total_solar_capacity
 
         self.save()
 

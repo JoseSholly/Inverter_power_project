@@ -54,11 +54,20 @@ class ApplianceCalculationUtility:
 
         return number_batteries
     
+    @property
+    def total_solar_capacity(self):
+        total_energy_consumption = sum(item.power_rating * item.quantity * item.backup_time for item in self.items)
+        adjusted_solar_cap= total_energy_consumption / 0.8
+        peak_sun_hours = 6
+        total_solar_cap = adjusted_solar_cap / peak_sun_hours
+        return total_solar_cap
+    
 
     def perform_all_calculations(self):
         self.total_load
         self.total_inverter_rating
         self.total_battery_cap_required
         self.number_of_batteries
+        self.total_solar_capacity
 
     
