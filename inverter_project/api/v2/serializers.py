@@ -6,6 +6,7 @@ class ApplianceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appliance
         fields = ['id', 'name']
+        ref_name = 'v2_appliance'
 
 
 class CalculationItemSerializer(serializers.ModelSerializer):
@@ -14,6 +15,7 @@ class CalculationItemSerializer(serializers.ModelSerializer):
     class Meta:
         model= CalculationItem
         fields = fields = ['id', 'appliance', 'quantity', 'power_rating', 'backup_time']
+        ref_name = 'v2_CalculationItem'
 
 class CalculationSerializer(serializers.ModelSerializer):
     appliance_calc = CalculationItemSerializer(many= True)
@@ -42,6 +44,7 @@ class CalculationSerializer(serializers.ModelSerializer):
             'appliance_calc'
 
         ]
+        ref_name = 'v2_calculation_create'
 
     def create(self, validated_data):
         calc_items_data = validated_data.pop('appliance_calc')
