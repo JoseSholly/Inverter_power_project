@@ -59,7 +59,7 @@ class ApplianceCalculationUtility:
         total_energy_consumption = sum(item.power_rating * item.quantity * item.backup_time for item in self.items)
         adjusted_solar_cap= total_energy_consumption / 0.8
         peak_sun_hours = 6
-        total_solar_cap = adjusted_solar_cap / peak_sun_hours
+        total_solar_cap = round(adjusted_solar_cap / peak_sun_hours, 2)
         return total_solar_cap
     
     @property
@@ -76,7 +76,7 @@ class ApplianceCalculationUtility:
     def current(self):
         total_solar_cap = self.total_solar_capacity
 
-        current = (total_solar_cap  * 1.25) / self.system_voltage
+        current = round((total_solar_cap  * 1.25) / self.system_voltage, 2)
 
         return current
         
