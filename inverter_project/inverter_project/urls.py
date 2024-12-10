@@ -48,6 +48,7 @@ urlpatterns = [
     path('admin/', admin.site.urls, name="admin"),
 
 
-    path('api/v1/power_calculator/', include("api.v1.urls",))
+    path('api/v1/power_calculator/', include("api.v1.urls",)),
+    path('api/v2/power_calculator/', include("api.v2.urls",))
 
 ]
