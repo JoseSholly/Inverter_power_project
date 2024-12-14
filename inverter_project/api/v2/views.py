@@ -10,6 +10,7 @@ from .serializers import ApplianceSerializer, CalculationSerializer
 from rest_framework.response import Response
 from power_calculator.permissions import IsStaffUser
 from inverter_rating_v2.models import Appliance, Calculation, CalculationItem
+from rest_framework import  status
 
 class AppliancesListView(generics.ListAPIView):
     queryset= Appliance.objects.all()
@@ -22,3 +23,16 @@ class CalculationCreateView(generics.CreateAPIView):
 class CalculationsListView(generics.ListAPIView):
     queryset= Calculation.objects.all()
     serializer_class= CalculationSerializer
+
+
+class CalculationUpdateView(generics.UpdateAPIView):
+    queryset = Calculation.objects.all()
+    serializer_class = CalculationSerializer
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data, status= status.HTTP_200_OK)

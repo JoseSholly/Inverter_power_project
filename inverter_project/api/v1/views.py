@@ -10,6 +10,7 @@ from power_calculator.models import Calculation, Appliance
 from .serializers import CalculationSerializer, ApplianceSerializer
 from rest_framework.response import Response
 from power_calculator.permissions import IsStaffUser
+from rest_framework import status
 
 class CalculationCreateView(generics.CreateAPIView):
     queryset = Calculation.objects.all()
@@ -29,7 +30,7 @@ class CalculationUpdateView(generics.UpdateAPIView):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        return Response(serializer.data)
+        return Response(serializer.data, status= status.HTTP_200_OK)
 
 class CalculationDeleteView(generics.DestroyAPIView):
     queryset = Calculation.objects.all()
@@ -42,7 +43,7 @@ class CalculationDeleteView(generics.DestroyAPIView):
         
         calculation_id = instance.id
         self.perform_destroy(instance)
-        return Response({"message": f"Calculation {calculation_id} deleted successfully"})
+        return Response({"message": f"Calculation {calculation_id} deleted successfully"}, status= status.HTTP_200_OK)
     
 
 class AppliancesListView(generics.ListAPIView):
