@@ -36,3 +36,16 @@ class CalculationUpdateView(generics.UpdateAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data, status= status.HTTP_200_OK)
+
+class CalculationDeleteView(generics.DestroyAPIView):
+    queryset = Calculation.objects.all()
+    serializer_class = CalculationSerializer
+    permission_classes= [IsStaffUser]
+
+    def destroy(self, request, *args, **kwargs):
+        
+        instance = self.get_object()
+        
+        calculation_id = instance.id
+        self.perform_destroy(instance)
+        return Response({"message": f"Calculation {calculation_id} deleted successfully"}, status= status.HTTP_200_OK)
