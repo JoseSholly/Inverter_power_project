@@ -18,3 +18,7 @@ class AppliancesListView(generics.ListAPIView):
 class CalculationCreateView(generics.CreateAPIView):
     queryset = Calculation.objects.all()
     serializer_class = CalculationSerializer
+
+class CalculationsListView(generics.ListAPIView):
+    queryset= Calculation.objects.all()
+    serializer_class= CalculationSerializer
