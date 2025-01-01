@@ -1,8 +1,6 @@
 from django.db import models
 from .validators import validate_battery_capacity, validate_power_rating, validate_backup_time
 import uuid
-from math import ceil
-import sympy as sp
 from .utils import SystemCalculationUtility
 
 
