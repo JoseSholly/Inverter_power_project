@@ -1,21 +1,31 @@
 from .common import *
 
+DEBUG = True
 
-# SECURITY WARNING: keep the secret key used in production secret!
+ALLOWED_HOSTS = []
+
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-DEBUG= True
-
-
-ALLOWED_HOSTS= []
-
+# Database configuration
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRESQL_DB_NAME"),
+        "USER": os.getenv("POSTGRESQL_DB_USER"),
+        "PASSWORD": os.getenv("POSTGRESQL_DB_PASSWORD"),
+        "HOST": os.getenv("POSTGRESQL_DB_HOST", "localhost"),
+        "PORT": os.getenv("POSTGRESQL_DB_PORT", "5432"),
     }
 }
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
+# CORS settings
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
 
-STATIC_URL = '/static/'
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
