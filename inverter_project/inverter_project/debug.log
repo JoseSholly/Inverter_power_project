@@ -25984,3 +25984,112 @@ File C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\dja
 File C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\db\models\sql\compiler.py first seen with mtime 1750323060.008495
 File C:\Users\HP\Documents\Git\Inverter_power_project\inverter_project\inverter_project\wsgi.py first seen with mtime 1750322535.395982
 File C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\contrib\sessions\backends\db.py first seen with mtime 1750323058.167656
+"GET /admin/ HTTP/1.1" 302 0
+Exception while resolving variable 'dark_mode_theme' in template 'admin/login.html'.
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\template\base.py", line 880, in _resolve_lookup
+    current = current[bit]
+              ~~~~~~~^^^^^
+KeyError: 'dark_mode_theme'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\template\base.py", line 890, in _resolve_lookup
+    current = getattr(current, bit)
+              ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'dict' object has no attribute 'dark_mode_theme'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\template\base.py", line 896, in _resolve_lookup
+    current = current[int(bit)]
+                      ^^^^^^^^
+ValueError: invalid literal for int() with base 10: 'dark_mode_theme'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\template\base.py", line 903, in _resolve_lookup
+    raise VariableDoesNotExist(
+django.template.base.VariableDoesNotExist: Failed lookup for key [dark_mode_theme] in {'raw': {'navbar_small_text': False, 'footer_small_text': False, 'body_small_text': False, 'brand_small_text': False, 'brand_colour': False, 'accent': 'accent-primary', 'navbar': 'navbar-white navbar-light', 'no_navbar_border': False, 'navbar_fixed': False, 'layout_boxed': False, 'footer_fixed': False, 'sidebar_fixed': False, 'sidebar': 'sidebar-dark-primary', 'sidebar_nav_small_text': False, 'sidebar_disable_expand': False, 'sidebar_nav_child_indent': False, 'sidebar_nav_compact_style': False, 'sidebar_nav_legacy_style': False, 'sidebar_nav_flat_style': False, 'theme': 'default', 'dark_mode_theme': None, 'button_classes': {'primary': 'btn-primary', 'secondary': 'btn-secondary', 'info': 'btn-info', 'warning': 'btn-warning', 'danger': 'btn-danger', 'success': 'btn-success'}}, 'theme': {'name': 'default', 'src': '/static/vendor/bootswatch/default/bootstrap.min.css'}, 'sidebar_classes': 'sidebar-dark-primary', 'navbar_classes': 'navbar-white navbar-light', 'body_classes': 'accent-primary theme-default', 'actions_classes': '', 'sidebar_list_classes': '', 'brand_classes': '', 'footer_classes': '', 'button_classes': {'primary': 'btn-primary', 'secondary': 'btn-secondary', 'info': 'btn-info', 'warning': 'btn-warning', 'danger': 'btn-danger', 'success': 'btn-success'}}
+"GET /admin/login/?next=/admin/ HTTP/1.1" 200 3065
+"GET /static/vendor/fontawesome-free/css/all.min.css HTTP/1.1" 200 59344
+"GET /static/jazzmin/css/main.css HTTP/1.1" 200 16969
+"GET /static/vendor/adminlte/img/AdminLTELogo.png HTTP/1.1" 200 2637
+"GET /static/vendor/adminlte/css/adminlte.min.css HTTP/1.1" 200 1382975
+"GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 200 292458
+"GET /static/vendor/adminlte/js/adminlte.min.js HTTP/1.1" 200 44244
+"GET /static/vendor/bootstrap/js/bootstrap.min.js HTTP/1.1" 200 62440
+"GET /static/vendor/fontawesome-free/webfonts/fa-solid-900.woff2 HTTP/1.1" 200 78196
+File C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\contrib\messages\storage\session.py first seen with mtime 1750323057.2055943
+File C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\template\context_processors.py first seen with mtime 1750323060.3812366
+File C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\contrib\sessions\serializers.py first seen with mtime 1750323058.160373
+File C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\contrib\messages\storage\cookie.py first seen with mtime 1750323057.202876
+File C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\contrib\auth\views.py first seen with mtime 1750323054.6383386
+File C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\contrib\messages\storage\fallback.py first seen with mtime 1750323057.2046108
+File C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\contrib\admin\forms.py first seen with mtime 1750323052.8251832
+File C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\contrib\messages\context_processors.py first seen with mtime 1750323057.1938858
+File C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\whitenoise\compress.py first seen with mtime 1750322977.9570417
+File C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\whitenoise\storage.py first seen with mtime 1750322977.9633675
+Exception while resolving variable 'dark_mode_theme' in template 'admin/login.html'.
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\template\base.py", line 880, in _resolve_lookup
+    current = current[bit]
+              ~~~~~~~^^^^^
+KeyError: 'dark_mode_theme'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\template\base.py", line 890, in _resolve_lookup
+    current = getattr(current, bit)
+              ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'dict' object has no attribute 'dark_mode_theme'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\template\base.py", line 896, in _resolve_lookup
+    current = current[int(bit)]
+                      ^^^^^^^^
+ValueError: invalid literal for int() with base 10: 'dark_mode_theme'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\template\base.py", line 903, in _resolve_lookup
+    raise VariableDoesNotExist(
+django.template.base.VariableDoesNotExist: Failed lookup for key [dark_mode_theme] in {'raw': {'navbar_small_text': False, 'footer_small_text': False, 'body_small_text': False, 'brand_small_text': False, 'brand_colour': False, 'accent': 'accent-primary', 'navbar': 'navbar-white navbar-light', 'no_navbar_border': False, 'navbar_fixed': False, 'layout_boxed': False, 'footer_fixed': False, 'sidebar_fixed': False, 'sidebar': 'sidebar-dark-primary', 'sidebar_nav_small_text': False, 'sidebar_disable_expand': False, 'sidebar_nav_child_indent': False, 'sidebar_nav_compact_style': False, 'sidebar_nav_legacy_style': False, 'sidebar_nav_flat_style': False, 'theme': 'default', 'dark_mode_theme': None, 'button_classes': {'primary': 'btn-primary', 'secondary': 'btn-secondary', 'info': 'btn-info', 'warning': 'btn-warning', 'danger': 'btn-danger', 'success': 'btn-success'}}, 'theme': {'name': 'default', 'src': '/static/vendor/bootswatch/default/bootstrap.min.css'}, 'sidebar_classes': 'sidebar-dark-primary', 'navbar_classes': 'navbar-white navbar-light', 'body_classes': 'accent-primary theme-default', 'actions_classes': '', 'sidebar_list_classes': '', 'brand_classes': '', 'footer_classes': '', 'button_classes': {'primary': 'btn-primary', 'secondary': 'btn-secondary', 'info': 'btn-info', 'warning': 'btn-warning', 'danger': 'btn-danger', 'success': 'btn-success'}}
+"POST /admin/login/?next=/admin/ HTTP/1.1" 200 3388
+Exception while resolving variable 'dark_mode_theme' in template 'admin/login.html'.
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\template\base.py", line 880, in _resolve_lookup
+    current = current[bit]
+              ~~~~~~~^^^^^
+KeyError: 'dark_mode_theme'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\template\base.py", line 890, in _resolve_lookup
+    current = getattr(current, bit)
+              ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'dict' object has no attribute 'dark_mode_theme'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\template\base.py", line 896, in _resolve_lookup
+    current = current[int(bit)]
+                      ^^^^^^^^
+ValueError: invalid literal for int() with base 10: 'dark_mode_theme'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\Git\Inverter_power_project\venv\Lib\site-packages\django\template\base.py", line 903, in _resolve_lookup
+    raise VariableDoesNotExist(
+django.template.base.VariableDoesNotExist: Failed lookup for key [dark_mode_theme] in {'raw': {'navbar_small_text': False, 'footer_small_text': False, 'body_small_text': False, 'brand_small_text': False, 'brand_colour': False, 'accent': 'accent-primary', 'navbar': 'navbar-white navbar-light', 'no_navbar_border': False, 'navbar_fixed': False, 'layout_boxed': False, 'footer_fixed': False, 'sidebar_fixed': False, 'sidebar': 'sidebar-dark-primary', 'sidebar_nav_small_text': False, 'sidebar_disable_expand': False, 'sidebar_nav_child_indent': False, 'sidebar_nav_compact_style': False, 'sidebar_nav_legacy_style': False, 'sidebar_nav_flat_style': False, 'theme': 'default', 'dark_mode_theme': None, 'button_classes': {'primary': 'btn-primary', 'secondary': 'btn-secondary', 'info': 'btn-info', 'warning': 'btn-warning', 'danger': 'btn-danger', 'success': 'btn-success'}}, 'theme': {'name': 'default', 'src': '/static/vendor/bootswatch/default/bootstrap.min.css'}, 'sidebar_classes': 'sidebar-dark-primary', 'navbar_classes': 'navbar-white navbar-light', 'body_classes': 'accent-primary theme-default', 'actions_classes': '', 'sidebar_list_classes': '', 'brand_classes': '', 'footer_classes': '', 'button_classes': {'primary': 'btn-primary', 'secondary': 'btn-secondary', 'info': 'btn-info', 'warning': 'btn-warning', 'danger': 'btn-danger', 'success': 'btn-success'}}
+"POST /admin/login/?next=/admin/ HTTP/1.1" 200 3388

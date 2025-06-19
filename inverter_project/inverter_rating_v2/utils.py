@@ -96,14 +96,14 @@ class ApplianceCalculationUtility:
         return round(current_amps, 2)
 
 
-    # def perform_all_calculations(self):
-    #     # Calling properties will execute their logic
-    #     _ = self.total_load
-    #     _ = self.inverter_rating
-    #     _ = self.total_battery_cap_required
-    #     _ = self.number_of_batteries
-    #     _ = self.total_solar_capacity
-    #     _ = self.controller_current
+    def perform_all_calculations(self):
+        # Calling properties will execute their logic
+        _ = self.total_load
+        _ = self.inverter_rating
+        _ = self.total_battery_cap_required
+        _ = self.number_of_batteries
+        _ = self.total_solar_capacity
+        _ = self.controller_current
 
 
     
