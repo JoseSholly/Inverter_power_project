@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from inverter_rating_v2.models import Appliance, Calculation, CalculationItem
+from inverter_rating_v2.utils import ApplianceCalculationUtility
+from inverter_rating_v2.models import Appliance 
 
 
 class ApplianceSerializer(serializers.ModelSerializer):
@@ -8,89 +9,175 @@ class ApplianceSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
         ref_name = 'v2_appliance'
 
+class ApplianceCalculationInputSerializer(serializers.Serializer):
+    """
+    Defines the expected structure for each appliance item in the calculation request.
+    It now accepts an 'id' (integer) and manually validates it against the Appliance model.
+    """
+    id = serializers.IntegerField(required=True, min_value=1) # Appliance ID
+    quantity = serializers.IntegerField(min_value=1, required=True)
+    power_rating = serializers.FloatField(min_value=0.01, required=True) # Power in Watts (W)
+    backup_time = serializers.FloatField(min_value=0.01, required=True) # Backup time in hours
 
-class CalculationItemSerializer(serializers.ModelSerializer):
-    appliance = ApplianceSerializer()
+    # We will manually add 'name' to the representation in to_representation
+    # We no longer need _appliance_instance here, as the parent serializer
+    # will prepare the data for us.
 
-    class Meta:
-        model= CalculationItem
-        fields = fields = ['id', 'appliance', 'quantity', 'power_rating', 'backup_time']
-        ref_name = 'v2_CalculationItem'
+    def validate(self, data):
+        """
+        Custom validation to lookup the Appliance by ID and store its instance
+        within the 'data' dictionary for the parent serializer's use.
+        """
+        appliance_id = data.get('id')
+        try:
+            # Attempt to fetch the Appliance instance
+            # This instance will be used by the parent serializer to get the name
+            # and by the utility if needed (though utility only needs power_rating, etc.)
+            data['appliance_instance'] = Appliance.objects.get(id=appliance_id) 
+        except Appliance.DoesNotExist:
+            raise serializers.ValidationError(
+                {'id': f"Appliance with ID {appliance_id} does not exist."}
+            )
+        return data
 
-class CalculationSerializer(serializers.ModelSerializer):
-    appliance_calc = CalculationItemSerializer(many= True)
-    total_load = serializers.FloatField(read_only=True)
-    inverter_rating = serializers.FloatField(read_only=True)
-    total_battery_capacity = serializers.FloatField(read_only=True)
-    numbers_of_batteries = serializers.FloatField(read_only=True)
-    total_solar_panel_capacity_needed = serializers.FloatField(read_only=True)
-    numbers_of_solar_panel = serializers.FloatField(read_only=True)
-    controller_current = serializers.FloatField(read_only=True)
+    def to_representation(self, instance):
+        """
+        Override to include the appliance name in the output.
+        'instance' here will be the dictionary *already prepared* by the parent
+        serializer (CalculationResultSerializer) which will contain 'id' and 'name'.
+        """
+        # Get the default representation (id, quantity, power_rating, backup_time)
+        representation = super().to_representation(instance)
+        
+        # Add the appliance name from the instance dictionary itself
+        # The parent serializer's _calculate_all method will ensure 'name' is here.
+        if 'name' in instance: # Check if 'name' is already provided in the instance data
+            representation['name'] = instance['name']
+        # If for some reason 'name' isn't there, you might want a fallback
+        # (e.g., fetching from DB, but this should ideally be avoided in to_representation
+        # as it can lead to N+1 queries if not careful).
+        elif 'id' in instance:
+            try:
+                # This fallback is less efficient but ensures name is present if upstream
+                # logic doesn't explicitly add it. Optimize if performance is critical.
+                appliance_instance = Appliance.objects.get(id=instance['id'])
+                representation['name'] = appliance_instance.name
+            except Appliance.DoesNotExist:
+                representation['name'] = None # Or handle error appropriately
+                
+        return representation
 
-    class Meta:
-        model = Calculation
-        fields = [
-            'id',
-            'system_voltage',
-            'battery_capacity',
-            'solar_panel_watt',
-            'total_load',
-            'inverter_rating',
-            'total_battery_capacity',
-            'numbers_of_batteries',
-            'total_solar_panel_capacity_needed',
-            'numbers_of_solar_panel',
-            'controller_current',
-            'appliance_calc'
 
-        ]
-        ref_name = 'v2_calculation_create'
+class CalculationResultSerializer(serializers.Serializer):
+    """
+    A non-model serializer that takes system parameters and appliance details
+    as input, performs calculations using ApplianceCalculationUtility, and returns the results.
+    """
+    system_voltage = serializers.FloatField(min_value=1.0, required=True) # Volts (V)
+    battery_capacity = serializers.FloatField(min_value=1.0, required=True) # Battery capacity in Ampere-hours (Ah)
+    solar_panel_watt = serializers.FloatField(min_value=1.0, required=True) # Solar panel rating in Watts-peak (Wp)
+
+    items = ApplianceCalculationInputSerializer(many=True, required=True)
+
+    total_load = serializers.SerializerMethodField()
+    inverter_rating = serializers.SerializerMethodField()
+    total_battery_capacity = serializers.SerializerMethodField()
+    numbers_of_batteries = serializers.SerializerMethodField()
+    total_solar_panel_capacity_needed = serializers.SerializerMethodField()
+    numbers_of_solar_panel = serializers.SerializerMethodField()
+    controller_current = serializers.SerializerMethodField()
+
+    _calculated_data = {}
+
+    def validate(self, data):
+        self._calculate_all(data)
+        return data
 
     def create(self, validated_data):
-        calc_items_data = validated_data.pop('appliance_calc')
-        calculation = Calculation.objects.create(**validated_data)
-        for item_data in calc_items_data:
-            appliance_data = item_data.pop('appliance')
-            appliance, created = Appliance.objects.get_or_create(**appliance_data)
-            CalculationItem.objects.create(calculation=calculation, appliance=appliance, **item_data)
-        
-        self._calculate(calculation)
-        return calculation
+        # 'create' for a non-model serializer simply returns the processed data.
+        return self._calculated_data
 
-    def update(self, instance, validated_data):
-        calc_items_data = validated_data.pop('appliance_calc', [])
-        
-        instance.battery_capacity = validated_data.get('battery_capacity', instance.battery_capacity)
-        instance.system_voltage = validated_data.get('system_voltage', instance.system_voltage)
-        instance.solar_panel_watt = validated_data.get('solar_panel_watt', instance.solar_panel_watt)
-        instance.save()
+    def _calculate_all(self, data):
+        """
+        Internal method to encapsulate all calculation logic,
+        delegating to ApplianceCalculationUtility.
+        Crucially, this method prepares the 'items' data to be JSON serializable
+        for storage in _calculated_data.
+        """
+        processed_items_for_utility = []
+        final_output_items = [] # This list will hold dicts ready for JSON serialization
 
-        # Update or create calculation items
-        existing_item_ids = [item.id for item in instance.appliance_calc.all()]
-        new_item_ids = [item_data.get('id') for item_data in calc_items_data if item_data.get('id')]
+        for item_data in data.get('items', []):
+            # The ApplianceCalculationInputSerializer's validate method added 'appliance_instance'
+            appliance_instance = item_data['appliance_instance']
 
-        # Delete items that are not in the new data
-        for item_id in existing_item_ids:
-            if item_id not in new_item_ids:
-                CalculationItem.objects.get(id=item_id).delete()
+            # Prepare data for the utility (only needs power_rating, quantity, backup_time)
+            processed_items_for_utility.append({
+                'power_rating': item_data['power_rating'],
+                'quantity': item_data['quantity'],
+                'backup_time': item_data['backup_time'],
+            })
 
-        for item_data in calc_items_data:
-            appliance_data = item_data.pop('appliance')
-            appliance, created = Appliance.objects.get_or_create(**appliance_data)
+            # Prepare data for the *final output*, including 'id' and 'name'
+            final_output_items.append({
+                'id': appliance_instance.id, # Use id
+                'name': appliance_instance.name, # Use name
+                'quantity': item_data['quantity'],
+                'power_rating': item_data['power_rating'],
+                'backup_time': item_data['backup_time'],
+            })
+
+        battery_capacity = data.get('battery_capacity')
+        system_voltage = data.get('system_voltage')
+        solar_panel_watt = data.get('solar_panel_watt')
+
+        calculator = ApplianceCalculationUtility(
+            battery_capacity=battery_capacity,
+            system_voltage=system_voltage,
+            solar_panel_watt=solar_panel_watt,
+            items=processed_items_for_utility # Utility only needs these values
+        )
+
+        calculated_results = {
+            'total_load': calculator.total_load,
+            'inverter_rating': calculator.inverter_rating,
+            'total_battery_capacity': calculator.total_battery_cap_required,
+            'numbers_of_batteries': calculator.number_of_batteries,
+            'total_solar_panel_capacity_needed': calculator.total_solar_capacity,
+            'numbers_of_solar_panel': calculator.number_of_panels,
+            'controller_current': calculator.controller_current,
+        }
+
+        # Store the combined input data and calculated results.
+        # Ensure the 'items' here are the JSON-serializable dictionaries.
+        self._calculated_data = {
             
-            item_id = item_data.get('id')
-            if item_id:
-                calculation_item = CalculationItem.objects.get(id=item_id, calculation=instance)
-                calculation_item.quantity = item_data.get('quantity', calculation_item.quantity)
-                calculation_item.power_rating = item_data.get('power_rating', calculation_item.power_rating)
-                calculation_item.appliance = appliance
-                calculation_item.save()
-            else:
-                CalculationItem.objects.create(calculation=instance, appliance=appliance, **item_data)
+            'system_voltage': data.get('system_voltage'),
+            'battery_capacity': data.get('battery_capacity'),
+            'solar_panel_watt': data.get('solar_panel_watt'),
+            **calculated_results,
+            'items': final_output_items, # Store the list of dictionaries with id and name
+            
+        }
 
-        # Recalculate fields
-        self._calculate(instance)
-        return instance
-    
-    def _calculate(self, calcultaion):
-        calcultaion.perform_calculation()
+    # SerializerMethodField implementations (no change needed here as they fetch from _calculated_data)
+    def get_total_load(self, obj):
+        return self._calculated_data.get('total_load')
+
+    def get_inverter_rating(self, obj):
+        return self._calculated_data.get('inverter_rating')
+
+    def get_total_battery_capacity(self, obj):
+        return self._calculated_data.get('total_battery_capacity')
+
+    def get_numbers_of_batteries(self, obj):
+        return self._calculated_data.get('numbers_of_batteries')
+
+    def get_total_solar_panel_capacity_needed(self, obj):
+        return self._calculated_data.get('total_solar_panel_capacity_needed')
+
+    def get_numbers_of_solar_panel(self, obj):
+        return self._calculated_data.get('numbers_of_solar_panel')
+
+    def get_controller_current(self, obj):
+        return self._calculated_data.get('controller_current')

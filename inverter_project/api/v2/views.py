@@ -1,51 +1,41 @@
-from django.shortcuts import render
-from django.http import JsonResponse, HttpResponse
-import json
-from django.forms.models import model_to_dict
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
-
-from rest_framework import generics
-from .serializers import ApplianceSerializer, CalculationSerializer
-from rest_framework.response import Response
-from power_calculator.permissions import IsStaffUser
-from inverter_rating_v2.models import Appliance, Calculation, CalculationItem
-from rest_framework import  status
-
-class AppliancesListView(generics.ListAPIView):
-    queryset= Appliance.objects.all()
-    serializer_class= ApplianceSerializer
-
-class CalculationCreateView(generics.CreateAPIView):
-    queryset = Calculation.objects.all()
-    serializer_class = CalculationSerializer
-
-class CalculationsListView(generics.ListAPIView):
-    queryset= Calculation.objects.all()
-    serializer_class= CalculationSerializer
+from rest_framework import status
+from power_calculator.models import Appliance
+from .serializers import ApplianceSerializer, CalculationResultSerializer
+from drf_yasg.utils import swagger_auto_schema
 
 
-class CalculationUpdateView(generics.UpdateAPIView):
-    queryset = Calculation.objects.all()
-    serializer_class = CalculationSerializer
+class ApplianceListView(APIView):
+    """
+    API View to list all available appliances from the database.
+    """
+    def get(self, request, *args, **kwargs):
+        # Fetch all Appliance objects from the database
+        appliances = Appliance.objects.all()
+        # Serialize the queryset using the ModelSerializer
+        serializer = ApplianceSerializer(appliances, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+class PerformCalculationView(APIView):
+    """
+    API endpoint to receive calculation inputs and return computed results while considering individual backup
+    It does not store calculation instances in the database.
+    """
+    http_method_names = ['post']
 
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data, status= status.HTTP_200_OK)
-
-class CalculationDeleteView(generics.DestroyAPIView):
-    queryset = Calculation.objects.all()
-    serializer_class = CalculationSerializer
-    permission_classes= [IsStaffUser]
-
-    def destroy(self, request, *args, **kwargs):
+    @swagger_auto_schema(request_body=CalculationResultSerializer, tags=["v2"])
+    def post(self, request, *args, **kwargs):
+        # Instantiate your CalculationResultSerializer with the request data
+        serializer = CalculationResultSerializer(data=request.data)
         
-        instance = self.get_object()
+        # Validate the incoming data. If invalid, it will raise an exception
+        # and return a 400 Bad Request response automatically.
+        serializer.is_valid(raise_exception=True) 
         
-        calculation_id = instance.id
-        self.perform_destroy(instance)
-        return Response({"message": f"Calculation {calculation_id} deleted successfully"}, status= status.HTTP_200_OK)
+        # Call .save() on the serializer. For non-model serializers, this
+        # triggers the create() method, which in our case returns the
+        # dictionary of input data combined with calculated results.
+        calculated_data = serializer.save() 
+        
+        # Return the calculated data as a successful HTTP 200 OK response.
+        return Response(calculated_data, status=status.HTTP_200_OK)

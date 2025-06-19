@@ -12,8 +12,8 @@ class SolarCalculationAPIView(APIView):
     @swagger_auto_schema(request_body=SolarSystemCalculationSerializer, tags=["v1"])
     def post(self, request, *args, **kwargs):
         """
-        Performs a new solar system calculation based on the provided input data.
-        Every POST request is treated as a new, independent calculation.
+        Performs  solar system calculation based on the provided input data.
+        Backup_time as a global parameter, applied to all appliances.
         """
         serializer = SolarSystemCalculationSerializer(data=request.data)
 
