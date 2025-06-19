@@ -1,10 +1,15 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import SolarSystemCalculationSerializer # Assuming your serializer is in serializers.py
+from .serializers import SolarSystemCalculationSerializer, ApplianceSerializer
+from drf_yasg.utils import swagger_auto_schema
+from power_calculator.models import Appliance
+
 
 class SolarCalculationAPIView(APIView):
+    http_method_names = ["post"]
 
+    @swagger_auto_schema(request_body=SolarSystemCalculationSerializer, tags=["Power Calculation"])
     def post(self, request, *args, **kwargs):
         """
         Performs a new solar system calculation based on the provided input data.
@@ -23,9 +28,14 @@ class SolarCalculationAPIView(APIView):
             # Return the calculated results with a 201 Created status
             return Response(calculated_results, status=status.HTTP_201_CREATED)
 
-        # If serializer.is_valid() returns False, raise_exception=True will
-        # automatically return a 400 Bad Request with validation errors,
-        # so an explicit else block here is not strictly necessary but can be added
-        # for custom error handling if needed.
-        # else:
-        #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ApplianceListView(APIView):
+    """
+    API View to list all available appliances from the database.
+    """
+    def get(self, request, *args, **kwargs):
+        # Fetch all Appliance objects from the database
+        appliances = Appliance.objects.all()
+        # Serialize the queryset using the ModelSerializer
+        serializer = ApplianceSerializer(appliances, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
