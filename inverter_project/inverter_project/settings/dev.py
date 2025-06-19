@@ -1,10 +1,12 @@
 from .common import *
+from decouple import config
+import os
 
 DEBUG = True
 
 ALLOWED_HOSTS = []
 
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = config("SECRET_KEY", cast=str)
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")

@@ -1,7 +1,13 @@
 from .common import *
-import dj_database_url
+from dotenv import load_dotenv
+from urllib.parse import urlparse
+from decouple import config
+import os
 
-SECRET_KEY = os.getenv("SECRET_KEY")
+
+load_dotenv()
+
+SECRET_KEY = config("SECRET_KEY", cast=str)
 
 DEBUG= False
 
@@ -13,8 +19,20 @@ if allowed_host_value:
     ALLOWED_HOSTS.append(allowed_host_value)
 
 
-database_url= os.getenv("DATABASE_URL")
-DATABASES["default"] = dj_database_url.parse(database_url)
+
+# Replace the DATABASES section of your settings.py with this
+tmpPostgres = urlparse(config("DATABASE_URL", cast=str))
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': tmpPostgres.path.replace('/', ''),
+        'USER': tmpPostgres.username,
+        'PASSWORD': tmpPostgres.password,
+        'HOST': tmpPostgres.hostname,
+        'PORT': 5432,
+    }
+}
 
  
 # CSRF_TRUSTED_ORIGINS= os.getenv("CSRF_TRUSTED_ORIGINS").split(",")
