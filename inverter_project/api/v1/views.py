@@ -9,7 +9,7 @@ from power_calculator.models import Appliance
 class SolarCalculationAPIView(APIView):
     http_method_names = ["post"]
 
-    @swagger_auto_schema(request_body=SolarSystemCalculationSerializer, tags=["Power Calculation"])
+    @swagger_auto_schema(request_body=SolarSystemCalculationSerializer, tags=["v1"])
     def post(self, request, *args, **kwargs):
         """
         Performs a new solar system calculation based on the provided input data.
