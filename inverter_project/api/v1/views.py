@@ -1,52 +1,31 @@
-from django.shortcuts import render
-from django.http import JsonResponse, HttpResponse
-import json
-from django.forms.models import model_to_dict
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
-
-from rest_framework import generics
-from power_calculator.models import Calculation, Appliance
-from .serializers import CalculationSerializer, ApplianceSerializer
-from rest_framework.response import Response
-from power_calculator.permissions import IsStaffUser
 from rest_framework import status
+from .serializers import SolarSystemCalculationSerializer # Assuming your serializer is in serializers.py
 
-class CalculationCreateView(generics.CreateAPIView):
-    queryset = Calculation.objects.all()
-    serializer_class = CalculationSerializer
+class SolarCalculationAPIView(APIView):
 
-class CalculationsListView(generics.ListAPIView):
-    queryset= Calculation.objects.all()
-    serializer_class= CalculationSerializer
+    def post(self, request, *args, **kwargs):
+        """
+        Performs a new solar system calculation based on the provided input data.
+        Every POST request is treated as a new, independent calculation.
+        """
+        serializer = SolarSystemCalculationSerializer(data=request.data)
 
-class CalculationUpdateView(generics.UpdateAPIView):
-    queryset = Calculation.objects.all()
-    serializer_class = CalculationSerializer
+        # Validate the incoming data
+        if serializer.is_valid(raise_exception=True):
+            # If data is valid, perform the calculations.
+            # The .save() method on a serializer (without a model instance)
+            # will call the .create() method defined in your serializer,
+            # which we've designed to run all the calculation logic.
+            calculated_results = serializer.save()
 
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data, status= status.HTTP_200_OK)
+            # Return the calculated results with a 201 Created status
+            return Response(calculated_results, status=status.HTTP_201_CREATED)
 
-class CalculationDeleteView(generics.DestroyAPIView):
-    queryset = Calculation.objects.all()
-    serializer_class = CalculationSerializer
-    permission_classes= [IsStaffUser]
-
-    def destroy(self, request, *args, **kwargs):
-        
-        instance = self.get_object()
-        
-        calculation_id = instance.id
-        self.perform_destroy(instance)
-        return Response({"message": f"Calculation {calculation_id} deleted successfully"}, status= status.HTTP_200_OK)
-    
-
-class AppliancesListView(generics.ListAPIView):
-    queryset= Appliance.objects.all()
-    serializer_class= ApplianceSerializer
-
+        # If serializer.is_valid() returns False, raise_exception=True will
+        # automatically return a 400 Bad Request with validation errors,
+        # so an explicit else block here is not strictly necessary but can be added
+        # for custom error handling if needed.
+        # else:
+        #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

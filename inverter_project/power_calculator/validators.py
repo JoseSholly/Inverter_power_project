@@ -8,13 +8,13 @@ def validate_battery_capacity(value):
         return value
 
 def validate_power_rating(value):
-    if value<1:
+    if value < 1:
         raise ValidationError("Power capacity must be greater than 1")
     else:
         return value
 
 def validate_backup_time(value):
-    if value<1:
+    if value < 1:
         raise ValidationError("Backup Time must be greater than 1 hour")
     else:
         return value

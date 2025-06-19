@@ -1,83 +1,117 @@
 from rest_framework import serializers
-from power_calculator.models import Appliance, Calculation, CalculationItem
+from power_calculator.validators import validate_backup_time, validate_battery_capacity, validate_power_rating
+from power_calculator.utils import SystemCalculationUtility
+BATTERY_VOLTAGE_CHOICES = [
+    (12, '12V'),
+    (24, '24V'),
+    (48, '48V'),
+]
 
-class ApplianceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Appliance
-        fields = ['id', 'name']
+BATTERY_CAPACITY_CHOICES = [
+    (150, '150Ah 12V'),
+    (200, '200Ah 12V'),
+    (220, '220Ah 12V'),
+    (250, '250Ah 12V'),
+]
 
-class CalculationItemSerializer(serializers.ModelSerializer):
-    appliance = ApplianceSerializer()
+SOLAR_PANEL_WATT = [
+    (300, '300W'),
+    (350, '350W'),
+    (400, '400W'),
+    (450, '450W'),
+]
 
-    class Meta:
-        model = CalculationItem
-        fields = ['id', 'appliance', 'quantity', 'power_rating']
+# --- New: Django REST Framework Serializers ---
 
-class CalculationSerializer(serializers.ModelSerializer):
-    calc = CalculationItemSerializer(many=True)
+class ApplianceInputSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=100, required=True)
+    quantity = serializers.IntegerField(min_value=1, default=1) # Here, quantity is not required by client, default is used if missing
+    power_rating = serializers.IntegerField(validators=[validate_power_rating], default=1) # Same for power_rating
+
+class SolarSystemCalculationSerializer(serializers.Serializer):
+    # Input fields - client MUST provide these values
+    backup_time = serializers.IntegerField(
+        required=True, # Client must provide this
+        help_text="How many hours of backup you need during a power outage.",
+        validators=[validate_backup_time]
+    )
+    battery_capacity = serializers.ChoiceField(
+        choices=BATTERY_CAPACITY_CHOICES,
+        required=True, # Client must provide this
+        validators=[validate_battery_capacity]
+    )
+    system_voltage = serializers.ChoiceField(
+        choices=BATTERY_VOLTAGE_CHOICES,
+        required=True # Client must provide this
+    )
+    solar_panel_watt = serializers.ChoiceField(
+        choices=SOLAR_PANEL_WATT,
+        required=True # Client must provide this
+    )
+    items = ApplianceInputSerializer(many=True, required=True) # Client must provide a list of items
+
+    # Output fields (read-only, populated after calculations)
     total_load = serializers.FloatField(read_only=True)
     inverter_rating = serializers.FloatField(read_only=True)
     total_battery_capacity = serializers.FloatField(read_only=True)
-    numbers_of_batteries = serializers.FloatField(read_only=True)
+    numbers_of_batteries = serializers.IntegerField(read_only=True)
     total_solar_panel_capacity_needed = serializers.FloatField(read_only=True)
-    numbers_of_solar_panel = serializers.FloatField(read_only=True)
+    numbers_of_solar_panel = serializers.IntegerField(read_only=True)
     total_current = serializers.FloatField(read_only=True)
 
-    class Meta:
-        model = Calculation
-        fields = [
-            'id', 'total_load', 'inverter_rating', 'backup_time', 'battery_capacity', 
-            'system_voltage', 'total_battery_capacity', 'numbers_of_batteries', 
-            'total_solar_panel_capacity_needed', 'solar_panel_watt', 'numbers_of_solar_panel', 
-            'total_current', 'created', 'updated', 'calc'
-        ]
+    def _perform_calculation_logic(self, data):
+        """
+        Helper method to encapsulate the calculation logic, used by both create and update.
+        """
+        calc_utility = SystemCalculationUtility(
+            total_load=0, # Initial value, will be calculated by the utility
+            backup_time=data['backup_time'],
+            battery_capacity=data['battery_capacity'],
+            system_voltage=data['system_voltage'],
+            solar_panel_watt=data['solar_panel_watt'],
+            items=data['items']
+        )
+        calc_utility.perform_all_calculations()
+
+        return {
+            'total_load': calc_utility.total_load,
+            'inverter_rating': calc_utility.inverter_rating,
+            'total_battery_capacity': calc_utility.total_battery_capacity,
+            'numbers_of_batteries': calc_utility.numbers_of_batteries,
+            'total_solar_panel_capacity_needed': calc_utility.total_solar_panel_capacity_needed,
+            'numbers_of_solar_panel': calc_utility.numbers_of_solar_panel,
+            'total_current': calc_utility.total_current,
+            # Echo input values as well
+            'backup_time': data['backup_time'],
+            'battery_capacity': data['battery_capacity'],
+            'system_voltage': data['system_voltage'],
+            'solar_panel_watt': data['solar_panel_watt'],
+            'items': data['items'],
+        }
 
     def create(self, validated_data):
-        calc_items_data = validated_data.pop('calc')
-        calculation = Calculation.objects.create(**validated_data)
-        for item_data in calc_items_data:
-            appliance_data = item_data.pop('appliance')
-            appliance, created = Appliance.objects.get_or_create(**appliance_data)
-            CalculationItem.objects.create(calculation=calculation, appliance=appliance, **item_data)
-        
-        self._recalculate(calculation)
-        return calculation
-   
+        """
+        Handles initial calculation (analogous to POST).
+        """
+        return self._perform_calculation_logic(validated_data)
+
     def update(self, instance, validated_data):
-        calc_items_data = validated_data.pop('calc', [])
-        
-        instance.backup_time = validated_data.get('backup_time', instance.backup_time)
-        instance.battery_capacity = validated_data.get('battery_capacity', instance.battery_capacity)
-        instance.system_voltage = validated_data.get('system_voltage', instance.system_voltage)
-        instance.solar_panel_watt = validated_data.get('solar_panel_watt', instance.solar_panel_watt)
-        instance.save()
+        """
+        Handles re-calculation based on updated input (analogous to PUT/PATCH).
+        'instance' here is the previous output dictionary, not a model instance.
+        'validated_data' contains the new, potentially partial, input.
+        """
+        # Create a mutable copy of the instance data
+        updated_data = instance.copy()
 
-        # Update or create calculation items
-        existing_item_ids = [item.id for item in instance.calc.all()]
-        new_item_ids = [item_data.get('id') for item_data in calc_items_data if item_data.get('id')]
-
-        # Delete items that are not in the new data
-        for item_id in existing_item_ids:
-            if item_id not in new_item_ids:
-                CalculationItem.objects.get(id=item_id).delete()
-
-        for item_data in calc_items_data:
-            appliance_data = item_data.pop('appliance')
-            appliance, created = Appliance.objects.get_or_create(**appliance_data)
-            
-            item_id = item_data.get('id')
-            if item_id:
-                calculation_item = CalculationItem.objects.get(id=item_id, calculation=instance)
-                calculation_item.quantity = item_data.get('quantity', calculation_item.quantity)
-                calculation_item.power_rating = item_data.get('power_rating', calculation_item.power_rating)
-                calculation_item.appliance = appliance
-                calculation_item.save()
+        # Update the instance data with the validated (new) data
+        for field, value in validated_data.items():
+            if field == 'items':
+                # For 'items', you might need more sophisticated merging logic
+                # For simplicity here, we'll replace the entire list if provided
+                updated_data['items'] = value
             else:
-                CalculationItem.objects.create(calculation=instance, appliance=appliance, **item_data)
-
-        # Recalculate fields
-        self._recalculate(instance)
-        return instance
+                updated_data[field] = value
         
-    def _recalculate(self, calculation):
-        calculation.perform_calculations()
+        # Now, re-run the calculations with the combined data
+        return self._perform_calculation_logic(updated_data)

@@ -1,6 +1,6 @@
 from math import ceil
-import sympy as sp
 
+# --- SystemCalculationUtility Class (remains the same) ---
 class SystemCalculationUtility:
     def __init__(self, total_load, backup_time, battery_capacity, system_voltage, solar_panel_watt, items):
         self.total_load = total_load
@@ -22,7 +22,8 @@ class SystemCalculationUtility:
         """
         Computes the total load based on the power rating and quantity of each appliance associated with the calculation.
         """
-        self.total_load = sum(item.power_rating * item.quantity for item in self.items)
+        # Ensure items is treated as a list of dicts, as it comes from serializer
+        self.total_load = sum(item['power_rating'] * item['quantity'] for item in self.items)
         return self.total_load
 
     def calculate_total_inverter_rating(self):
@@ -52,16 +53,6 @@ class SystemCalculationUtility:
         return self.total_solar_panel_capacity_needed
 
     def get_no_panel(self, required_capacity, panel_capacity):
-        # x = sp.symbols('x')
-        # inequality = x * panel_capacity > required_capacity
-        # solution = sp.solve(inequality, x)
-    
-        # if solution:
-        #     solution = solution.args[0]
-        #     solution = solution.lhs.evalf()
-        # else:
-        #     solution = 0
-
         solution = ceil(required_capacity / panel_capacity)
         return solution
 
@@ -85,3 +76,4 @@ class SystemCalculationUtility:
         self.calculate_solar_panel_capacity_needed()
         self.calculate_no_of_panel()
         self.calculate_total_current()
+
