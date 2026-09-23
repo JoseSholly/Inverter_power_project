@@ -14,3 +14,6 @@ MAX_BACKUP_TIME_H = 24
 MAX_SYSTEM_VOLTAGE_V = 240
 MAX_BATTERY_CAPACITY_AH = 5_000
 MAX_SOLAR_PANEL_W = 1_000
+
+MAX_NAME_FILTER_LENGTH = 100
+"""Longest accepted `?name=` filter on the appliance endpoints."""

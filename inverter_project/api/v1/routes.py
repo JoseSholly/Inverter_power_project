@@ -1,8 +1,11 @@
 """v1 HTTP routes: translate schemas <-> service DTOs, nothing else."""
+from typing import Annotated
+
 from django_bolt import Router
 from django_bolt.concurrency import sync_to_thread
+from django_bolt.params import Query
 
-from api.common.appliances import list_appliances
+from api.common.appliance_endpoint import NAME_FILTER_DESCRIPTION, list_appliances_response
 from api.common.errors import unknown_appliance_to_validation_error
 from api.common.exceptions import UnknownApplianceError
 from api.common.routing import Routes
@@ -16,9 +19,11 @@ calculation_service = V1CalculationService()
 
 
 @routes.get("/appliances/", name="v1-appliances")
-async def appliances() -> list[ApplianceOut]:
-    """List all appliances that can be referenced by ID in a calculation."""
-    return [ApplianceOut(id=a.id, name=a.name) for a in await sync_to_thread(list_appliances)]
+async def appliances(
+    name: Annotated[str | None, Query(description=NAME_FILTER_DESCRIPTION)] = None,
+) -> list[ApplianceOut]:
+    """List appliances that can be referenced by ID in a calculation, optionally filtered by name."""
+    return await list_appliances_response(name)
 
 
 @routes.post("/calculate/", name="v1-calculate", status_code=200)

@@ -152,9 +152,9 @@ While the server is running:
 
 | Method | Path | Description | Success |
 |---|---|---|---|
-| GET | `/api/v1/power_calculator/appliances/` | List appliances (`id`, `name`) | 200 |
+| GET | `/api/v1/power_calculator/appliances/` | List appliances (`id`, `name`), optional `?name=` filter | 200 |
 | POST | `/api/v1/power_calculator/calculate/` | v1 calculation (one backup time) | 200 |
-| GET | `/api/v2/power_calculator/appliances/` | List appliances (`id`, `name`) | 200 |
+| GET | `/api/v2/power_calculator/appliances/` | List appliances (`id`, `name`), optional `?name=` filter | 200 |
 | POST | `/api/v2/power_calculator/calculate/` | v2 calculation (per-appliance backup time) | 200 |
 
 Every path works **with or without the trailing slash** (`/calculate/` and `/calculate` behave the same, with no redirect). The appliance endpoints also answer `HEAD`.
@@ -166,6 +166,25 @@ Both appliance endpoints return the same list, newest first:
   {"id": 24, "name": "Security Cameras"}
 ]
 ```
+
+#### Filtering appliances by name
+Add `?name=` to keep only appliances whose name **contains** the text:
+- The match ignores case, including accented letters (`élan` matches `Élan`).
+- Leading, trailing and repeated spaces are ignored.
+- An empty or missing `name` returns everything.
+- The value can be up to 100 characters; anything longer returns 422.
+
+```bash
+curl "http://127.0.0.1:8000/api/v2/power_calculator/appliances/?name=fan"
+```
+```json
+[
+  {"id": 27, "name": "Standing Fan"},
+  {"id": 26, "name": "Ceiling Fan"},
+  {"id": 9, "name": "Fan"}
+]
+```
+No match returns `[]`.
 
 ### Errors
 Every error comes back as JSON with a `detail` key. Nothing internal (stack traces, SQL, exception text) is exposed.

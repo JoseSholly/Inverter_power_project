@@ -23,3 +23,17 @@ def unknown_appliance_to_validation_error(
             if appliance_id in missing
         ]
     )
+
+
+def query_too_long_error(param: str, value: str, max_length: int) -> RequestValidationError:
+    """422 for an over-long query parameter (Bolt doesn't enforce query constraints itself)."""
+    return RequestValidationError(
+        [
+            {
+                "type": "validation_error",
+                "loc": ["query", param],
+                "msg": f"Expected `str` of length <= {max_length}",
+                "input": value,
+            }
+        ]
+    )
