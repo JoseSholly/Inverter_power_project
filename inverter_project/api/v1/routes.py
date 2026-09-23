@@ -5,22 +5,23 @@ from django_bolt.concurrency import sync_to_thread
 from api.common.appliances import list_appliances
 from api.common.errors import unknown_appliance_to_validation_error
 from api.common.exceptions import UnknownApplianceError
+from api.common.routing import Routes
 from api.common.schemas import ApplianceOut
 
 from .schemas import ApplianceItemOut, CalculationIn, CalculationOut
 from .services import V1CalculationRequest, V1CalculationService, V1ItemRequest
 
-router = Router(tags=["v1"])
+routes = Routes(Router(tags=["v1"]))
 calculation_service = V1CalculationService()
 
 
-@router.get("/appliances/", name="v1-appliances")
+@routes.get("/appliances/", name="v1-appliances")
 async def appliances() -> list[ApplianceOut]:
     """List all appliances that can be referenced by ID in a calculation."""
     return [ApplianceOut(id=a.id, name=a.name) for a in await sync_to_thread(list_appliances)]
 
 
-@router.post("/calculate/", name="v1-calculate", status_code=200)
+@routes.post("/calculate/", name="v1-calculate", status_code=200)
 async def calculate(data: CalculationIn) -> CalculationOut:
     """
     Size an inverter, battery bank and solar array for a list of appliances.
@@ -55,3 +56,6 @@ async def calculate(data: CalculationIn) -> CalculationOut:
         solar_panel_watt=request.solar_panel_watt,
         items=[ApplianceItemOut(i.id, i.name, i.quantity, i.power_rating) for i in result.items],
     )
+
+
+router = routes.finalize()

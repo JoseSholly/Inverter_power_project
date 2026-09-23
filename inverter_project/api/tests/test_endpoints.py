@@ -1,6 +1,7 @@
 from unittest import mock
 
 from django.test import TestCase
+from django_bolt.openapi.schema_generator import SchemaGenerator
 from django_bolt.testing import TestClient
 
 from inverter_project.api import api
@@ -146,3 +147,52 @@ class EndpointTests(TestCase):
         self.assertNotIn("db down", response.text)
         self.assertIn("Unhandled exception", logs.output[0])
         self.assertIn("Traceback", logs.output[0])
+
+    def test_paths_work_with_and_without_trailing_slash(self):
+        for url in (V1_URL, V1_URL.rstrip("/")):
+            with self.subTest(url=url):
+                self.assertEqual(self.client.post(url, json=self.v1_payload()).status_code, 200)
+        for url in (V2_URL, V2_URL.rstrip("/")):
+            with self.subTest(url=url):
+                self.assertEqual(self.client.post(url, json=self.v2_payload()).status_code, 200)
+        for version in ("v1", "v2"):
+            response = self.client.get(f"/api/{version}/power_calculator/appliances")
+            self.assertEqual(response.status_code, 200)
+
+    def test_wrong_method_is_405_with_allow_header(self):
+        cases = []
+        for version in ("v1", "v2"):
+            calculate = f"/api/{version}/power_calculator/calculate/"
+            appliances = f"/api/{version}/power_calculator/appliances/"
+            for url in (calculate, calculate.rstrip("/")):
+                cases += [(method, url, "OPTIONS, POST") for method in ("GET", "HEAD", "PUT", "PATCH", "DELETE")]
+            for url in (appliances, appliances.rstrip("/")):
+                cases += [(method, url, "GET, HEAD, OPTIONS") for method in ("POST", "PUT", "PATCH", "DELETE")]
+        for method, url, allow in cases:
+            with self.subTest(method=method, url=url):
+                response = self.client.request(method, url)
+                self.assertEqual(response.status_code, 405)
+                self.assertEqual(response.headers["allow"], allow)
+                if method != "HEAD":
+                    self.assertEqual(response.json(), {"detail": f"Method not allowed. Allowed methods: {allow}."})
+
+    def test_head_on_appliances(self):
+        response = self.client.head("/api/v1/power_calculator/appliances/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"")
+
+    def test_unknown_path_is_still_404(self):
+        self.assertEqual(self.client.get("/api/v1/power_calculator/nope/").status_code, 404)
+
+    def test_docs_list_only_canonical_paths(self):
+        # runbolt serves this schema at /api/docs/openapi.json; generate it the same way.
+        paths = SchemaGenerator(api, api._openapi_config).generate().to_schema()["paths"]
+        self.assertEqual(
+            {path: sorted(methods) for path, methods in paths.items()},
+            {
+                "/api/v1/power_calculator/appliances/": ["get"],
+                "/api/v1/power_calculator/calculate/": ["post"],
+                "/api/v2/power_calculator/appliances/": ["get"],
+                "/api/v2/power_calculator/calculate/": ["post"],
+            },
+        )

@@ -136,6 +136,8 @@ While the server is running:
 | GET | `/api/v2/power_calculator/appliances/` | List appliances (`id`, `name`) | 200 |
 | POST | `/api/v2/power_calculator/calculate/` | v2 calculation (per-appliance backup time) | 200 |
 
+Every path works **with or without the trailing slash** (`/calculate/` and `/calculate` behave the same, with no redirect). The appliance endpoints also answer `HEAD`.
+
 Both appliance endpoints return the same list, newest first:
 ```json
 [
@@ -152,8 +154,8 @@ Every error comes back as JSON with a `detail` key. Nothing internal (stack trac
 | **422** | The body isn't valid JSON, isn't an object, or is empty | `{"detail": [{"type": "json_invalid", "loc": ["body"], "msg": "Input data was truncated", ...}]}` |
 | **422** | A field is missing, has the wrong type, or is out of range | see below |
 | **422** | An appliance ID doesn't exist | see below |
-| **404** | Unknown URL, or the wrong HTTP method on an endpoint | `{"detail": "Not Found"}` |
-| **308** | POST without the trailing slash | redirects to the `/`-terminated URL |
+| **405** | Wrong HTTP method on a known endpoint (e.g. `GET /calculate/`) | `{"detail": "Method not allowed. Allowed methods: OPTIONS, POST."}` with an `Allow` header |
+| **404** | Unknown URL | `{"detail": "Not Found"}` |
 | **500** | An unexpected server fault (e.g. the database is down) | `{"detail": "Internal Server Error"}` |
 
 Each 422 lists every problem. `loc` is the path to the offending value, and item indexes start at `"0"`:
@@ -514,5 +516,6 @@ The suite covers each version's calculator (pure unit tests), each service (with
 - **One sizing model for both versions.** Battery capacity now allows for inverter losses (0.8) and a 50% depth of discharge, so the bank is no longer undersized. Before, v2 had neither and v1 had only the inverter factor. Solar is rounded once, at the end. Both versions return `total_current` (installed array) and `controller_current` (array × 1.25). Before, v2 sized the controller from the required capacity instead of the installed panels.
 - v2 `system_voltage` must be a multiple of 12 V, because batteries are 12 V units.
 - `items` must contain 1–100 appliances, and every numeric input has a realistic upper limit. Absurd values used to crash the server (500) or return nonsense.
+- The wrong HTTP method still returns **405** with an `Allow` header, as with DRF. Paths now also work **without the trailing slash**: DRF redirected them (301), and a POST was then lost.
 - The unknown-appliance error points at the exact item (`loc: ["body", "items", "<index>", "id"]`).
 - API docs moved to `/api/docs`. Dependencies are managed with uv. Python 3.12+ and Django 5.2 are required.
