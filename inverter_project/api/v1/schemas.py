@@ -38,6 +38,7 @@ class CalculationOut(msgspec.Struct):
     total_solar_panel_capacity_needed: float
     numbers_of_solar_panel: int
     total_current: float
+    controller_current: float
     backup_time: int
     battery_capacity: int
     system_voltage: int

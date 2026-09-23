@@ -20,25 +20,18 @@ class V1CalculatorTests(SimpleTestCase):
         result = V1Calculator().calculate(make_input())
         self.assertEqual(result.total_load, 855)
         self.assertEqual(result.inverter_rating, 1.07)
-        self.assertEqual(result.total_battery_capacity, 178.12)
-        self.assertEqual(result.numbers_of_batteries, 2)
+        self.assertEqual(result.total_battery_capacity, 356.25)
+        self.assertEqual(result.numbers_of_batteries, 4)
         self.assertEqual(result.total_solar_panel_capacity_needed, 712.5)
         self.assertEqual(result.numbers_of_solar_panel, 3)
         self.assertEqual(result.total_current, 43.75)
+        self.assertEqual(result.controller_current, 54.69)
 
-    def test_battery_count_is_series_times_parallel(self):
-        calc = V1Calculator()
-        # 12V: one battery per string, strings = ceil(needed / capacity)
-        self.assertEqual(calc.number_of_batteries(450, 200, 12), 3)
-        # 24V: 2 in series per string, 1 string
-        self.assertEqual(calc.number_of_batteries(178.12, 200, 24), 2)
-        # 24V needing more than one string used to return 2 regardless of load
-        self.assertEqual(calc.number_of_batteries(500, 200, 24), 6)
-        # 48V: 4 in series per string
-        self.assertEqual(calc.number_of_batteries(390, 200, 48), 8)
+    def test_energy_uses_one_backup_time(self):
+        self.assertEqual(V1Calculator.energy(855, 4), 3420)
 
     def test_large_load_on_48v_scales_battery_count(self):
         result = V1Calculator().calculate(make_input(system_voltage=48, items=(LoadItem(10, 1000),)))
-        # 10 kW * 4 h / (48 V * 0.8) = 1041.67 Ah -> 6 strings of 4 batteries
-        self.assertEqual(result.total_battery_capacity, 1041.67)
-        self.assertEqual(result.numbers_of_batteries, 24)
+        # 40 kWh / (48 V x 0.8 x 0.5) = 2083.33 Ah -> 11 strings of 4 batteries
+        self.assertEqual(result.total_battery_capacity, 2083.33)
+        self.assertEqual(result.numbers_of_batteries, 44)

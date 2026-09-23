@@ -51,7 +51,9 @@ class EndpointTests(TestCase):
         self.assertEqual(response.status_code, 200)
         body = response.json()
         self.assertEqual(body["total_load"], 60)
+        self.assertEqual(body["total_battery_capacity"], 25.0)
         self.assertEqual(body["numbers_of_batteries"], 2)
+        self.assertIn("controller_current", body)
         self.assertEqual(body["items"], [{"id": self.appliances[0].id, "name": "LED Light", "quantity": 6, "power_rating": 10}])
 
     def test_v1_defaults_quantity_and_power_rating(self):
@@ -64,7 +66,8 @@ class EndpointTests(TestCase):
         self.assertEqual(response.status_code, 200)
         body = response.json()
         self.assertEqual(body["total_load"], 120.0)
-        self.assertEqual(body["total_battery_capacity"], 20.0)
+        self.assertEqual(body["total_battery_capacity"], 50.0)
+        self.assertIn("total_current", body)
         self.assertEqual(body["items"][0]["name"], "Fridge")
 
     def test_unknown_appliance_is_422(self):
@@ -81,6 +84,7 @@ class EndpointTests(TestCase):
             (V1_URL, self.v1_payload(backup_time=0)),
             (V1_URL, self.v1_payload(items=[])),
             (V2_URL, self.v2_payload(system_voltage=0)),
+            (V2_URL, self.v2_payload(system_voltage=30)),
             (V2_URL, self.v2_payload(items=[])),
         ]
         for url, payload in cases:

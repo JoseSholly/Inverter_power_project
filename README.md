@@ -5,7 +5,9 @@ A stateless API that sizes a home backup power system. You send a list of applia
 There are two versions of the calculation:
 
 - **v1** uses **one backup time for all appliances** and only accepts standard component sizes (12/24/48 V systems, 150–250 Ah batteries, 300–450 W panels).
-- **v2** lets **each appliance have its own backup time** and accepts any positive system voltage, battery capacity and panel wattage.
+- **v2** lets **each appliance have its own backup time**. It accepts any system voltage that is a multiple of 12 V, and any positive battery capacity and panel wattage.
+
+Apart from how energy demand is worked out, both versions use the **same sizing model** (`api/common/sizing.py`). If every appliance has the same backup time, v1 and v2 return identical results.
 
 ## Table of Contents
 - [Tech Stack](#tech-stack)
@@ -42,6 +44,7 @@ inverter_project/
 │   │   ├── appliances.py         # appliance lookup (single query) + listing
 │   │   ├── exceptions.py         # UnknownApplianceError (domain error)
 │   │   ├── errors.py             # domain error -> 422 response
+│   │   ├── sizing.py             # shared sizing model: constants + formulas (pure)
 │   │   └── schemas.py            # ApplianceOut
 │   ├── v1/
 │   │   ├── calculator.py         # pure v1 math (no Django/HTTP imports)
@@ -57,12 +60,12 @@ Each version is built in layers:
 
 | Layer | Responsibility | Depends on |
 |---|---|---|
-| `calculator.py` | Sizing math only. Numbers in, frozen dataclass out | nothing |
+| `calculator.py` | Builds the version's energy demand, then applies the shared sizing model. Numbers in, frozen dataclass out | `api/common/sizing.py` |
 | `services.py` | Looks up appliances, builds calculator input, returns a result DTO with appliance names | calculator, `api/common` |
 | `schemas.py` | Validates and documents HTTP request/response bodies | msgspec |
 | `routes.py` | Maps schemas to service DTOs and domain errors to HTTP errors | services, schemas |
 
-v1 and v2 never import from each other, so you can change or add a version (e.g. `v3`) without touching the others.
+v1 and v2 never import from each other. They share only the sizing formulas, which keeps their results consistent. You can add a version (e.g. `v3`) without touching the others.
 
 ## Setup
 
@@ -184,7 +187,7 @@ An appliance ID that isn't in the database also returns 422:
 ### v2: `POST /api/v2/power_calculator/calculate/`
 | Field | Type | Required | Allowed values |
 |---|---|---|---|
-| `system_voltage` | number | yes | ≥ 1 (V) |
+| `system_voltage` | number | yes | multiple of 12: `12`, `24`, `36`, `48`, … (V) |
 | `battery_capacity` | number | yes | ≥ 1 (Ah of one 12 V battery) |
 | `solar_panel_watt` | number | yes | ≥ 1 (Wp of one panel) |
 | `items` | array | yes | at least 1 item |
@@ -225,11 +228,12 @@ Response `200 OK`:
 {
   "total_load": 855,
   "inverter_rating": 1.07,
-  "total_battery_capacity": 178.12,
-  "numbers_of_batteries": 2,
+  "total_battery_capacity": 356.25,
+  "numbers_of_batteries": 4,
   "total_solar_panel_capacity_needed": 712.5,
   "numbers_of_solar_panel": 3,
   "total_current": 43.75,
+  "controller_current": 54.69,
   "backup_time": 4,
   "battery_capacity": 200,
   "system_voltage": 24,
@@ -267,11 +271,12 @@ Response `200 OK`:
   "solar_panel_watt": 350.0,
   "total_load": 251.0,
   "inverter_rating": 0.31,
-  "total_battery_capacity": 51.96,
+  "total_battery_capacity": 129.9,
   "numbers_of_batteries": 2,
   "total_solar_panel_capacity_needed": 259.79,
   "numbers_of_solar_panel": 1,
-  "controller_current": 13.53,
+  "total_current": 14.58,
+  "controller_current": 18.23,
   "items": [
     {"id": 1, "name": "Wifi Router",   "quantity": 1, "power_rating": 75.0,  "backup_time": 5.0},
     {"id": 2, "name": "Phone Charger", "quantity": 1, "power_rating": 120.0, "backup_time": 4.0},
@@ -281,38 +286,38 @@ Response `200 OK`:
 ```
 
 ## Calculation Formulas
-Symbols: *P* = Σ(power_rating × quantity) in W, *t* = backup time (h), *V* = system voltage, *C* = capacity of one battery (Ah), *W* = watts of one panel.
+The only difference between the versions is how the **daily energy demand *E*** (Wh) is built:
 
-Batteries are treated as **12 V units**. A bank needs `ceil(V / 12)` batteries in series per string and `ceil(required Ah / C)` strings in parallel:
+| Version | Energy |
+|---|---|
+| v1 | *E* = *P* × `backup_time`: one backup time for every appliance |
+| v2 | *E* = Σ(`power_rating` × `quantity` × `backup_time`): each appliance's own backup time |
 
-`numbers_of_batteries = ceil(V / 12) × ceil(total_battery_capacity / C)`
+After that, both versions use the same model in `api/common/sizing.py`.
 
-### v1 (`api/v1/calculator.py`)
-Constants: power factor 0.8, inverter efficiency 0.8, 6 peak sun hours.
+Symbols: *P* = Σ(`power_rating` × `quantity`) in W, *V* = system voltage, *C* = capacity of one battery (Ah), *W* = watts of one panel.
+
+| Constant | Value | Meaning |
+|---|---|---|
+| Power factor | 0.8 | W → VA for household loads |
+| Inverter efficiency | 0.8 | inverter and wiring losses (conservative) |
+| Depth of discharge | 0.5 | usable share of a lead-acid/tubular battery |
+| Peak sun hours | 6 | average daily full-sun hours |
+| Solar system efficiency | 0.8 | panel derating, controller and charging losses |
+| Controller safety factor | 1.25 | headroom over the array current |
 
 | Output | Formula |
 |---|---|
 | `total_load` (W) | *P* |
 | `inverter_rating` (kVA) | round(*P* / 0.8 / 1000, 2) |
-| `total_battery_capacity` (Ah) | round(*P* × *t* / (*V* × 0.8), 2) |
-| `numbers_of_batteries` | series × parallel (see above) |
-| `total_solar_panel_capacity_needed` (W) | round(*P* × *t* / 6) / 0.8 |
-| `numbers_of_solar_panel` | ceil(solar capacity / *W*) |
-| `total_current` (A) | round(panels × *W* / *V*, 2) |
+| `total_battery_capacity` (Ah) | round(*E* / (*V* × 0.8 × 0.5), 2) |
+| `numbers_of_batteries` | ceil(*V* / 12) in series × ceil(`total_battery_capacity` / *C*) strings |
+| `total_solar_panel_capacity_needed` (Wp) | round(*E* / (6 × 0.8), 2) |
+| `numbers_of_solar_panel` | ceil(`total_solar_panel_capacity_needed` / *W*) |
+| `total_current` (A) | round(panels × *W* / *V*, 2): current of the installed array |
+| `controller_current` (A) | round(panels × *W* × 1.25 / *V*, 2): charge controller rating |
 
-### v2 (`api/v2/calculator.py`)
-Constants: power factor 0.8, system loss factor 0.8, 6 peak sun hours, 1.25 controller safety factor.
-Energy *E* = Σ(power_rating × quantity × backup_time) in Wh, so each appliance uses its own backup time.
-
-| Output | Formula |
-|---|---|
-| `total_load` (W) | round(*P*, 2) |
-| `inverter_rating` (kVA) | round(*P* / 0.8 / 1000, 2) |
-| `total_battery_capacity` (Ah) | round(*E* / *V*, 2) |
-| `numbers_of_batteries` | series × parallel (see above) |
-| `total_solar_panel_capacity_needed` (Wp) | round(*E* / 0.8 / 6, 2) |
-| `numbers_of_solar_panel` | ceil(solar capacity / *W*) |
-| `controller_current` (A) | round(solar capacity × 1.25 / *V*, 2) |
+Batteries are 12 V units, so a 24 V bank needs 2 in series per string and a 48 V bank needs 4. Currents use the panels actually installed, not the calculated minimum capacity. Rounding up (`ceil`) ignores floating-point noise, so a value like 3.0000000000000004 counts as 3.
 
 ## Running Tests
 ```bash
@@ -342,5 +347,7 @@ The suite covers each version's calculator (pure unit tests), each service (with
 - v1 `calculate` returns **200** instead of 201, because nothing is created.
 - **Battery count fix (v1 and v2)**: the count is now batteries in series × parallel strings. Previously v1 returned only `V / 12` for 24/48 V systems whatever the load, and v2 ignored the series count.
 - v1 `inverter_rating` is rounded to 2 decimals, like v2.
+- **One sizing model for both versions.** Battery capacity now allows for inverter losses (0.8) and a 50% depth of discharge, so the bank is no longer undersized. Before, v2 had neither and v1 had only the inverter factor. Solar is rounded once, at the end. Both versions return `total_current` (installed array) and `controller_current` (array × 1.25). Before, v2 sized the controller from the required capacity instead of the installed panels.
+- v2 `system_voltage` must be a multiple of 12 V, because batteries are 12 V units.
 - `items` must contain at least one appliance.
 - API docs moved to `/api/docs`. Dependencies are managed with uv. Python 3.12+ and Django 5.2 are required.

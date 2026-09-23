@@ -48,6 +48,7 @@ async def calculate(data: CalculationIn) -> CalculationOut:
         total_solar_panel_capacity_needed=output.total_solar_panel_capacity_needed,
         numbers_of_solar_panel=output.numbers_of_solar_panel,
         total_current=output.total_current,
+        controller_current=output.controller_current,
         backup_time=request.backup_time,
         battery_capacity=request.battery_capacity,
         system_voltage=request.system_voltage,

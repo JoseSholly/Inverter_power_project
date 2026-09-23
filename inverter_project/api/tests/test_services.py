@@ -42,7 +42,8 @@ class V2CalculationServiceTests(TestCase):
         result = V2CalculationService().calculate(self.request(V2ItemRequest(self.fridge.id, 1, 150.0, 8.0)))
         self.assertEqual(result.items[0].name, "Fridge")
         self.assertEqual(result.output.total_load, 150.0)
-        self.assertEqual(result.output.total_battery_capacity, 50.0)
+        # 1200 Wh / (24 V x 0.8 x 0.5)
+        self.assertEqual(result.output.total_battery_capacity, 125.0)
 
     def test_unknown_appliance_raises(self):
         with self.assertRaises(UnknownApplianceError):

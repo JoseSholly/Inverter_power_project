@@ -51,6 +51,7 @@ async def calculate(data: CalculationIn) -> CalculationOut:
         numbers_of_batteries=output.numbers_of_batteries,
         total_solar_panel_capacity_needed=output.total_solar_panel_capacity_needed,
         numbers_of_solar_panel=output.numbers_of_solar_panel,
+        total_current=output.total_current,
         controller_current=output.controller_current,
         items=[ApplianceItemOut(i.id, i.name, i.quantity, i.power_rating, i.backup_time) for i in result.items],
     )
