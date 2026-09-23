@@ -18,6 +18,7 @@ Apart from how energy demand is worked out, both versions use the **same sizing 
 - [Request Fields](#request-fields)
 - [Examples](#examples)
 - [Calculation Formulas](#calculation-formulas)
+- [Worked Scenarios](#worked-scenarios)
 - [Running Tests](#running-tests)
 - [Deployment](#deployment)
 - [Changes from the DRF Version](#changes-from-the-drf-version)
@@ -144,57 +145,84 @@ Both appliance endpoints return the same list, newest first:
 ```
 
 ### Errors
-Invalid input returns **422 Unprocessable Entity** with a list of problems. `loc` points to the field that failed:
+Every error comes back as JSON with a `detail` key. Nothing internal (stack traces, SQL, exception text) is exposed.
+
+| Status | When | Example |
+|---|---|---|
+| **422** | The body isn't valid JSON, isn't an object, or is empty | `{"detail": [{"type": "json_invalid", "loc": ["body"], "msg": "Input data was truncated", ...}]}` |
+| **422** | A field is missing, has the wrong type, or is out of range | see below |
+| **422** | An appliance ID doesn't exist | see below |
+| **404** | Unknown URL, or the wrong HTTP method on an endpoint | `{"detail": "Not Found"}` |
+| **308** | POST without the trailing slash | redirects to the `/`-terminated URL |
+| **500** | An unexpected server fault (e.g. the database is down) | `{"detail": "Internal Server Error"}` |
+
+Each 422 lists every problem. `loc` is the path to the offending value, and item indexes start at `"0"`:
 ```json
 {
   "detail": [
     {
-      "loc": ["body", "battery_capacity"],
-      "msg": "Invalid enum value 123",
+      "loc": ["body", "items", "0", "quantity"],
+      "msg": "Expected `int` <= 1000",
       "type": "validation_error"
     }
   ]
 }
 ```
-An appliance ID that isn't in the database also returns 422:
+An appliance ID that isn't in the database gets one error per offending item:
 ```json
 {
   "detail": [
     {
       "type": "unknown_appliance",
-      "loc": ["body", "items", "id"],
-      "msg": "Appliance(s) with ID 999 do not exist in the database.",
-      "input": [999]
+      "loc": ["body", "items", "1", "id"],
+      "msg": "Appliance with ID 777 does not exist.",
+      "input": 777
     }
   ]
 }
 ```
+
+**Logging.** Rejected requests (4xx) are logged as a single WARNING line. Unexpected errors (5xx) are logged at ERROR with the full traceback, so real faults stand out.
+
+**Input limits** keep values realistic for a home system and keep the maths safe from overflow. Values outside these limits get a 422:
+
+| Limit | Value |
+|---|---|
+| Appliances per request | 1–100 |
+| `quantity` | 1–1,000 |
+| `power_rating` | up to 100,000 W |
+| `backup_time` | up to 24 h (the model recharges from solar once a day) |
+| `system_voltage` (v2) | 12–240 V, multiple of 12 |
+| `battery_capacity` (v2) | up to 5,000 Ah |
+| `solar_panel_watt` (v2) | up to 1,000 W |
 
 ## Request Fields
 
 ### v1: `POST /api/v1/power_calculator/calculate/`
 | Field | Type | Required | Allowed values |
 |---|---|---|---|
-| `backup_time` | integer | yes | ≥ 1 (hours; applies to every appliance) |
+| `backup_time` | integer | yes | 1–24 (hours; applies to every appliance) |
 | `battery_capacity` | integer | yes | `150`, `200`, `220`, `250` (Ah of one 12 V battery) |
 | `system_voltage` | integer | yes | `12`, `24`, `48` (V) |
 | `solar_panel_watt` | integer | yes | `300`, `350`, `400`, `450` (W of one panel) |
-| `items` | array | yes | at least 1 item |
+| `items` | array | yes | 1–100 items |
 | `items[].id` | integer | yes | an existing appliance ID |
-| `items[].quantity` | integer | no (default `1`) | ≥ 1 |
-| `items[].power_rating` | integer | no (default `1`) | ≥ 1 (W) |
+| `items[].quantity` | integer | no (default `1`) | 1–1,000 |
+| `items[].power_rating` | integer | no (default `1`) | 1–100,000 (W) |
 
 ### v2: `POST /api/v2/power_calculator/calculate/`
 | Field | Type | Required | Allowed values |
 |---|---|---|---|
-| `system_voltage` | number | yes | multiple of 12: `12`, `24`, `36`, `48`, … (V) |
-| `battery_capacity` | number | yes | ≥ 1 (Ah of one 12 V battery) |
-| `solar_panel_watt` | number | yes | ≥ 1 (Wp of one panel) |
-| `items` | array | yes | at least 1 item |
+| `system_voltage` | number | yes | 12–240, multiple of 12 (V) |
+| `battery_capacity` | number | yes | 1–5,000 (Ah of one 12 V battery) |
+| `solar_panel_watt` | number | yes | 1–1,000 (Wp of one panel) |
+| `items` | array | yes | 1–100 items |
 | `items[].id` | integer | yes | an existing appliance ID |
-| `items[].quantity` | integer | yes | ≥ 1 |
-| `items[].power_rating` | number | yes | ≥ 0.01 (W) |
-| `items[].backup_time` | number | yes | ≥ 0.01 (hours) |
+| `items[].quantity` | integer | yes | 1–1,000 |
+| `items[].power_rating` | number | yes | 0.01–100,000 (W) |
+| `items[].backup_time` | number | yes | 0.01–24 (hours) |
+
+Unknown extra fields are ignored.
 
 ## Examples
 Ready-to-run scripts are in [`examples/`](examples). They use `requests`, which `uv sync` installs as a dev dependency:
@@ -286,38 +314,174 @@ Response `200 OK`:
 ```
 
 ## Calculation Formulas
-The only difference between the versions is how the **daily energy demand *E*** (Wh) is built:
+Both versions share one sizing model (`api/common/sizing.py`). The **only** difference is how the daily energy demand **E** is built. With the same backup time for every appliance, v1 and v2 give identical results, and a test checks this.
 
-| Version | Energy |
-|---|---|
-| v1 | *E* = *P* × `backup_time`: one backup time for every appliance |
-| v2 | *E* = Σ(`power_rating` × `quantity` × `backup_time`): each appliance's own backup time |
-
-After that, both versions use the same model in `api/common/sizing.py`.
-
-Symbols: *P* = Σ(`power_rating` × `quantity`) in W, *V* = system voltage, *C* = capacity of one battery (Ah), *W* = watts of one panel.
-
+### Constants (both versions)
 | Constant | Value | Meaning |
 |---|---|---|
-| Power factor | 0.8 | W → VA for household loads |
-| Inverter efficiency | 0.8 | inverter and wiring losses (conservative) |
-| Depth of discharge | 0.5 | usable share of a lead-acid/tubular battery |
-| Peak sun hours | 6 | average daily full-sun hours |
-| Solar system efficiency | 0.8 | panel derating, controller and charging losses |
+| Power factor (PF) | 0.8 | converts W to VA for household loads |
+| Inverter efficiency (η<sub>inv</sub>) | 0.8 | inverter and wiring losses (conservative) |
+| Depth of discharge (DoD) | 0.5 | usable share of a lead-acid/tubular battery |
+| Battery unit voltage | 12 V | batteries are 12 V units wired in series |
+| Peak sun hours (PSH) | 6 h | average daily full-sun hours |
+| Solar system efficiency (η<sub>sol</sub>) | 0.8 | panel derating, controller and charging losses |
 | Controller safety factor | 1.25 | headroom over the array current |
 
-| Output | Formula |
-|---|---|
-| `total_load` (W) | *P* |
-| `inverter_rating` (kVA) | round(*P* / 0.8 / 1000, 2) |
-| `total_battery_capacity` (Ah) | round(*E* / (*V* × 0.8 × 0.5), 2) |
-| `numbers_of_batteries` | ceil(*V* / 12) in series × ceil(`total_battery_capacity` / *C*) strings |
-| `total_solar_panel_capacity_needed` (Wp) | round(*E* / (6 × 0.8), 2) |
-| `numbers_of_solar_panel` | ceil(`total_solar_panel_capacity_needed` / *W*) |
-| `total_current` (A) | round(panels × *W* / *V*, 2): current of the installed array |
-| `controller_current` (A) | round(panels × *W* × 1.25 / *V*, 2): charge controller rating |
+Symbols: **V** = `system_voltage`, **C** = `battery_capacity` (Ah of one battery), **W** = `solar_panel_watt`.
+All results are rounded to 2 decimals. Counts are rounded **up**, ignoring float noise such as 3.0000000000000004.
 
-Batteries are 12 V units, so a 24 V bank needs 2 in series per string and a 48 V bank needs 4. Currents use the panels actually installed, not the calculated minimum capacity. Rounding up (`ceil`) ignores floating-point noise, so a value like 3.0000000000000004 counts as 3.
+### v1 formulas (one backup time *t* for every appliance)
+| # | Output | Formula |
+|---|---|---|
+| 1 | `total_load` (W) | P = Σ (`power_rating` × `quantity`) |
+| 2 | energy (Wh, internal) | **E = P × t** |
+| 3 | `inverter_rating` (kVA) | P ÷ PF ÷ 1000 = P ÷ 800 |
+| 4 | `total_battery_capacity` (Ah) | Ah = E ÷ (V × η<sub>inv</sub> × DoD) = E ÷ (V × 0.4) |
+| 5 | `numbers_of_batteries` | ⌈V ÷ 12⌉ in series × ⌈Ah ÷ C⌉ parallel strings |
+| 6 | `total_solar_panel_capacity_needed` (Wp) | Wp = E ÷ (PSH × η<sub>sol</sub>) = E ÷ 4.8 |
+| 7 | `numbers_of_solar_panel` | N = ⌈Wp ÷ W⌉ |
+| 8 | `total_current` (A) | N × W ÷ V: current of the installed array |
+| 9 | `controller_current` (A) | N × W × 1.25 ÷ V: charge controller rating |
+
+### v2 formulas (each appliance *i* has its own backup time *t<sub>i</sub>*)
+| # | Output | Formula |
+|---|---|---|
+| 1 | `total_load` (W) | P = Σ (`power_rating`<sub>i</sub> × `quantity`<sub>i</sub>) |
+| 2 | energy (Wh, internal) | **E = Σ (`power_rating`<sub>i</sub> × `quantity`<sub>i</sub> × t<sub>i</sub>)** |
+| 3 | `inverter_rating` (kVA) | P ÷ PF ÷ 1000 = P ÷ 800 |
+| 4 | `total_battery_capacity` (Ah) | Ah = E ÷ (V × η<sub>inv</sub> × DoD) = E ÷ (V × 0.4) |
+| 5 | `numbers_of_batteries` | ⌈V ÷ 12⌉ in series × ⌈Ah ÷ C⌉ parallel strings |
+| 6 | `total_solar_panel_capacity_needed` (Wp) | Wp = E ÷ (PSH × η<sub>sol</sub>) = E ÷ 4.8 |
+| 7 | `numbers_of_solar_panel` | N = ⌈Wp ÷ W⌉ |
+| 8 | `total_current` (A) | N × W ÷ V: current of the installed array |
+| 9 | `controller_current` (A) | N × W × 1.25 ÷ V: charge controller rating |
+
+Why these formulas:
+- **Inverter** sizes for the peak load running together. It doesn't depend on backup time.
+- **Battery Ah** must deliver E through the inverter (÷ 0.8) while only using half the battery's rated capacity (÷ 0.5), which protects lead-acid life.
+- **Battery count**: a 24 V bank needs 2 × 12 V batteries in series per string, a 48 V bank needs 4. You add parallel strings until the Ah is covered.
+- **Solar** must put back E every day in 6 sun-hours, after 20% losses.
+- **Currents** are based on the panels actually installed (N × W), because that is what the controller has to handle.
+
+## Worked Scenarios
+The same home is sized with both versions. Appliance IDs match a fresh database loaded with `populate_appliances`.
+
+**The home**: 4 LED bulbs (10 W), 2 fans (75 W), a TV (120 W), a fridge (150 W) and a laptop (65 W), on a **24 V** system with **200 Ah** batteries and **400 W** panels.
+
+### Scenario 1 (v1): 6 hours of backup for everything
+Request:
+```json
+{
+  "backup_time": 6,
+  "battery_capacity": 200,
+  "system_voltage": 24,
+  "solar_panel_watt": 400,
+  "items": [
+    {"id": 8,  "quantity": 4, "power_rating": 10},
+    {"id": 9,  "quantity": 2, "power_rating": 75},
+    {"id": 4,  "quantity": 1, "power_rating": 120},
+    {"id": 3,  "quantity": 1, "power_rating": 150},
+    {"id": 11, "quantity": 1, "power_rating": 65}
+  ]
+}
+```
+Step by step:
+
+| Step | Working | Result |
+|---|---|---|
+| Load P | 4×10 + 2×75 + 120 + 150 + 65 | **525 W** |
+| Energy E | 525 W × 6 h | 3,150 Wh |
+| Inverter | 525 ÷ 800 = 0.656 | **0.66 kVA** (buy a 1 kVA unit) |
+| Battery Ah | 3,150 ÷ (24 × 0.4) = 328.125 | **328.12 Ah** |
+| Batteries | ⌈24 ÷ 12⌉ = 2 in series × ⌈328.12 ÷ 200⌉ = 2 strings | **4 batteries** (2S2P) |
+| Solar Wp | 3,150 ÷ 4.8 | **656.25 Wp** |
+| Panels | ⌈656.25 ÷ 400⌉ | **2 panels** (800 W installed) |
+| Array current | 2 × 400 ÷ 24 | **33.33 A** |
+| Controller | 33.33 × 1.25 | **41.67 A** (buy a 50 A controller) |
+
+Response `200 OK` (items abbreviated):
+```json
+{
+  "total_load": 525,
+  "inverter_rating": 0.66,
+  "total_battery_capacity": 328.12,
+  "numbers_of_batteries": 4,
+  "total_solar_panel_capacity_needed": 656.25,
+  "numbers_of_solar_panel": 2,
+  "total_current": 33.33,
+  "controller_current": 41.67,
+  "backup_time": 6,
+  "battery_capacity": 200,
+  "system_voltage": 24,
+  "solar_panel_watt": 400,
+  "items": [{"id": 8, "name": "LED Light", "quantity": 4, "power_rating": 10}, "..."]
+}
+```
+
+### Scenario 2 (v2): each appliance runs as long as it's really needed
+The same home, but the fridge runs all night while the TV runs only in the evening:
+
+| Appliance | Power × qty | Backup | Energy |
+|---|---|---|---|
+| LED Light (id 8) | 10 W × 4 | 8 h | 320 Wh |
+| Fan (id 9) | 75 W × 2 | 6 h | 900 Wh |
+| TV (id 4) | 120 W × 1 | 3 h | 360 Wh |
+| Fridge (id 3) | 150 W × 1 | 10 h | 1,500 Wh |
+| Laptop (id 11) | 65 W × 1 | 4 h | 260 Wh |
+| **Total** | **525 W** | | **3,340 Wh** |
+
+Request:
+```json
+{
+  "system_voltage": 24,
+  "battery_capacity": 200,
+  "solar_panel_watt": 400,
+  "items": [
+    {"id": 8,  "quantity": 4, "power_rating": 10,  "backup_time": 8},
+    {"id": 9,  "quantity": 2, "power_rating": 75,  "backup_time": 6},
+    {"id": 4,  "quantity": 1, "power_rating": 120, "backup_time": 3},
+    {"id": 3,  "quantity": 1, "power_rating": 150, "backup_time": 10},
+    {"id": 11, "quantity": 1, "power_rating": 65,  "backup_time": 4}
+  ]
+}
+```
+Step by step:
+
+| Step | Working | Result |
+|---|---|---|
+| Load P | same appliances | **525 W** |
+| Energy E | sum of the energy column | 3,340 Wh |
+| Inverter | 525 ÷ 800 | **0.66 kVA** (unchanged: backup time doesn't affect it) |
+| Battery Ah | 3,340 ÷ (24 × 0.4) = 347.92 | **347.92 Ah** |
+| Batteries | 2 in series × ⌈347.92 ÷ 200⌉ = 2 strings | **4 batteries** (2S2P) |
+| Solar Wp | 3,340 ÷ 4.8 | **695.83 Wp** |
+| Panels | ⌈695.83 ÷ 400⌉ | **2 panels** (800 W installed) |
+| Array current | 2 × 400 ÷ 24 | **33.33 A** |
+| Controller | 33.33 × 1.25 | **41.67 A** |
+
+Response `200 OK` (items abbreviated):
+```json
+{
+  "system_voltage": 24.0,
+  "battery_capacity": 200.0,
+  "solar_panel_watt": 400.0,
+  "total_load": 525.0,
+  "inverter_rating": 0.66,
+  "total_battery_capacity": 347.92,
+  "numbers_of_batteries": 4,
+  "total_solar_panel_capacity_needed": 695.83,
+  "numbers_of_solar_panel": 2,
+  "total_current": 33.33,
+  "controller_current": 41.67,
+  "items": [{"id": 8, "name": "LED Light", "quantity": 4, "power_rating": 10.0, "backup_time": 8.0}, "..."]
+}
+```
+
+### Comparing the two
+- The **load and inverter are the same**. Only energy-based outputs (battery Ah, solar Wp) change.
+- v2 needs **190 Wh more** energy here, because the fridge's 10 h outweighs the TV's shorter 3 h. Both still fit in 4 batteries and 2 panels.
+- Use **v1** for a quick estimate when everything should last the same time. Use **v2** when appliances run for different lengths of time, which gives a tighter, more realistic size.
+- If you give every v2 item the same backup time as v1 (6 h), v2 returns exactly the v1 numbers.
 
 ## Running Tests
 ```bash
@@ -349,5 +513,6 @@ The suite covers each version's calculator (pure unit tests), each service (with
 - v1 `inverter_rating` is rounded to 2 decimals, like v2.
 - **One sizing model for both versions.** Battery capacity now allows for inverter losses (0.8) and a 50% depth of discharge, so the bank is no longer undersized. Before, v2 had neither and v1 had only the inverter factor. Solar is rounded once, at the end. Both versions return `total_current` (installed array) and `controller_current` (array × 1.25). Before, v2 sized the controller from the required capacity instead of the installed panels.
 - v2 `system_voltage` must be a multiple of 12 V, because batteries are 12 V units.
-- `items` must contain at least one appliance.
+- `items` must contain 1–100 appliances, and every numeric input has a realistic upper limit. Absurd values used to crash the server (500) or return nonsense.
+- The unknown-appliance error points at the exact item (`loc: ["body", "items", "<index>", "id"]`).
 - API docs moved to `/api/docs`. Dependencies are managed with uv. Python 3.12+ and Django 5.2 are required.

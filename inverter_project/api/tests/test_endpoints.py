@@ -1,3 +1,5 @@
+from unittest import mock
+
 from django.test import TestCase
 from django_bolt.testing import TestClient
 
@@ -70,12 +72,56 @@ class EndpointTests(TestCase):
         self.assertIn("total_current", body)
         self.assertEqual(body["items"][0]["name"], "Fridge")
 
-    def test_unknown_appliance_is_422(self):
-        for url, payload in ((V1_URL, self.v1_payload(items=[{"id": 9999}])),
-                             (V2_URL, self.v2_payload(items=[{"id": 9999, "quantity": 1, "power_rating": 1, "backup_time": 1}]))):
-            response = self.client.post(url, json=payload)
-            self.assertEqual(response.status_code, 422)
-            self.assertIn("9999", response.json()["detail"][0]["msg"])
+    def test_unknown_appliance_is_422_pointing_at_the_item(self):
+        known = self.appliances[0].id
+        cases = (
+            (V1_URL, self.v1_payload(items=[{"id": known}, {"id": 9999}])),
+            (V2_URL, self.v2_payload(items=[
+                {"id": known, "quantity": 1, "power_rating": 1, "backup_time": 1},
+                {"id": 9999, "quantity": 1, "power_rating": 1, "backup_time": 1},
+            ])),
+        )
+        for url, payload in cases:
+            with self.subTest(url=url):
+                response = self.client.post(url, json=payload)
+                self.assertEqual(response.status_code, 422)
+                self.assertEqual(response.json()["detail"], [{
+                    "type": "unknown_appliance",
+                    "loc": ["body", "items", "1", "id"],
+                    "msg": "Appliance with ID 9999 does not exist.",
+                    "input": 9999,
+                }])
+
+    def test_malformed_requests_are_422(self):
+        for body in (b'{"backup_time":', b"", b"[]", b"backup_time=4"):
+            with self.subTest(body=body):
+                response = self.client.post(V1_URL, content=body, headers={"content-type": "application/json"})
+                self.assertEqual(response.status_code, 422)
+                self.assertIn("detail", response.json())
+
+    def test_out_of_range_values_are_422_not_500(self):
+        v1_item = {"id": self.appliances[0].id, "quantity": 1, "power_rating": 10}
+        v2_item = {"id": self.appliances[0].id, "quantity": 1, "power_rating": 10.0, "backup_time": 1.0}
+        cases = [
+            (V1_URL, self.v1_payload(items=[{**v1_item, "id": 10**20}])),
+            (V1_URL, self.v1_payload(items=[{**v1_item, "quantity": 2**63 - 1}])),
+            (V1_URL, self.v1_payload(items=[{**v1_item, "power_rating": 2**63 - 1}])),
+            (V1_URL, self.v1_payload(backup_time=25)),
+            (V1_URL, self.v1_payload(items=[v1_item] * 101)),
+            (V2_URL, self.v2_payload(items=[{**v2_item, "power_rating": 1e308}])),
+            (V2_URL, self.v2_payload(items=[{**v2_item, "backup_time": 24.5}])),
+            (V2_URL, self.v2_payload(system_voltage=252)),
+            (V2_URL, self.v2_payload(battery_capacity=1e9)),
+            (V2_URL, self.v2_payload(solar_panel_watt=5000)),
+        ]
+        for url, payload in cases:
+            with self.subTest(url=url, payload=payload):
+                self.assertEqual(self.client.post(url, json=payload).status_code, 422)
+
+    def test_maximum_valid_request_succeeds(self):
+        item = {"id": self.appliances[0].id, "quantity": 1000, "power_rating": 100000, "backup_time": 24}
+        response = self.client.post(V2_URL, json=self.v2_payload(system_voltage=240, items=[item] * 100))
+        self.assertEqual(response.status_code, 200)
 
     def test_invalid_input_is_422(self):
         cases = [
@@ -90,3 +136,13 @@ class EndpointTests(TestCase):
         for url, payload in cases:
             with self.subTest(url=url, payload=payload):
                 self.assertEqual(self.client.post(url, json=payload).status_code, 422)
+
+    def test_unexpected_error_is_generic_500_and_logged_with_traceback(self):
+        with mock.patch("api.v1.routes.calculation_service.calculate", side_effect=RuntimeError("db down")):
+            with self.assertLogs("django.server", level="ERROR") as logs:
+                response = self.client.post(V1_URL, json=self.v1_payload())
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.json(), {"detail": "Internal Server Error"})
+        self.assertNotIn("db down", response.text)
+        self.assertIn("Unhandled exception", logs.output[0])
+        self.assertIn("Traceback", logs.output[0])

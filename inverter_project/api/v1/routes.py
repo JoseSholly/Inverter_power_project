@@ -37,7 +37,7 @@ async def calculate(data: CalculationIn) -> CalculationOut:
         # Services use the sync ORM, so run them off the event loop.
         result = await sync_to_thread(calculation_service.calculate, request)
     except UnknownApplianceError as exc:
-        raise unknown_appliance_to_validation_error(exc) from exc
+        raise unknown_appliance_to_validation_error(exc, [item.id for item in data.items]) from exc
 
     output = result.output
     return CalculationOut(
