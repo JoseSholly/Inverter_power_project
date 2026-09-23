@@ -9,6 +9,7 @@ POWER_FACTOR = 0.8
 SYSTEM_LOSS_FACTOR = 0.8
 PEAK_SUN_HOURS = 6
 CONTROLLER_SAFETY_FACTOR = 1.25
+BATTERY_UNIT_VOLTAGE = 12
 
 
 @dataclass(frozen=True)
@@ -57,7 +58,9 @@ class V2Calculator:
             total_load=total_load,
             inverter_rating=self.inverter_rating(total_load),
             total_battery_capacity=battery_capacity_needed,
-            numbers_of_batteries=self.number_of_batteries(battery_capacity_needed, data.battery_capacity),
+            numbers_of_batteries=self.number_of_batteries(
+                battery_capacity_needed, data.battery_capacity, data.system_voltage
+            ),
             total_solar_panel_capacity_needed=solar_capacity,
             numbers_of_solar_panel=self.number_of_panels(solar_capacity, data.solar_panel_watt),
             controller_current=self.controller_current(solar_capacity, data.system_voltage),
@@ -84,10 +87,13 @@ class V2Calculator:
         return round(total_energy_wh / system_voltage, 2)
 
     @staticmethod
-    def number_of_batteries(total_battery_capacity: float, battery_capacity: float) -> int:
-        if battery_capacity <= 0:
+    def number_of_batteries(total_battery_capacity: float, battery_capacity: float, system_voltage: float) -> int:
+        """12V batteries needed: batteries in series per string x parallel strings."""
+        if battery_capacity <= 0 or system_voltage <= 0:
             return 0
-        return int(ceil(total_battery_capacity / battery_capacity))
+        batteries_per_string = ceil(system_voltage / BATTERY_UNIT_VOLTAGE)
+        strings = ceil(total_battery_capacity / battery_capacity)
+        return int(batteries_per_string * strings)
 
     @staticmethod
     def solar_capacity(total_energy_wh: float) -> float:

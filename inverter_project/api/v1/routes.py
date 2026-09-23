@@ -20,7 +20,7 @@ async def appliances() -> list[ApplianceOut]:
     return [ApplianceOut(id=a.id, name=a.name) for a in await sync_to_thread(list_appliances)]
 
 
-@router.post("/calculate/", name="v1-calculate", status_code=201)
+@router.post("/calculate/", name="v1-calculate", status_code=200)
 async def calculate(data: CalculationIn) -> CalculationOut:
     """
     Size an inverter, battery bank and solar array for a list of appliances.

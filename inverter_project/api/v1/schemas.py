@@ -20,7 +20,7 @@ class CalculationIn(msgspec.Struct):
     battery_capacity: Annotated[BatteryCapacity, Meta(description="Capacity of one 12V battery in Ah.")]
     system_voltage: Annotated[SystemVoltage, Meta(description="System (battery bank) voltage in V.")]
     solar_panel_watt: Annotated[SolarPanelWatt, Meta(description="Rating of one solar panel in W.")]
-    items: list[ApplianceItemIn]
+    items: Annotated[list[ApplianceItemIn], Meta(min_length=1, description="At least one appliance.")]
 
 
 class ApplianceItemOut(msgspec.Struct):

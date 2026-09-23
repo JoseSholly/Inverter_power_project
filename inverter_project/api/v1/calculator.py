@@ -62,7 +62,7 @@ class V1Calculator:
     @staticmethod
     def inverter_rating(total_load: float) -> float:
         """Inverter size in kVA."""
-        return (total_load / POWER_FACTOR) / 1000
+        return round((total_load / POWER_FACTOR) / 1000, 2)
 
     @staticmethod
     def total_battery_capacity(total_load: float, backup_time: float, system_voltage: int) -> float:
@@ -71,9 +71,10 @@ class V1Calculator:
 
     @staticmethod
     def number_of_batteries(total_battery_capacity: float, battery_capacity: int, system_voltage: int) -> int:
-        if system_voltage != BATTERY_UNIT_VOLTAGE:
-            return ceil(system_voltage / BATTERY_UNIT_VOLTAGE)
-        return ceil(total_battery_capacity / battery_capacity)
+        """12V batteries needed: batteries in series per string x parallel strings."""
+        batteries_per_string = ceil(system_voltage / BATTERY_UNIT_VOLTAGE)
+        strings = ceil(total_battery_capacity / battery_capacity)
+        return batteries_per_string * strings
 
     @staticmethod
     def solar_panel_capacity_needed(total_load: float, backup_time: float) -> float:

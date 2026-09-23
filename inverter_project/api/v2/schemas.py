@@ -14,9 +14,9 @@ class ApplianceItemIn(msgspec.Struct):
 
 class CalculationIn(msgspec.Struct):
     system_voltage: Annotated[float, Meta(ge=1.0, description="System (battery bank) voltage in V.")]
-    battery_capacity: Annotated[float, Meta(ge=1.0, description="Capacity of one battery in Ah.")]
+    battery_capacity: Annotated[float, Meta(ge=1.0, description="Capacity of one 12V battery in Ah.")]
     solar_panel_watt: Annotated[float, Meta(ge=1.0, description="Rating of one solar panel in Wp.")]
-    items: list[ApplianceItemIn]
+    items: Annotated[list[ApplianceItemIn], Meta(min_length=1, description="At least one appliance.")]
 
 
 class ApplianceItemOut(msgspec.Struct):
