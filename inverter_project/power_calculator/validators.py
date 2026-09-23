@@ -7,11 +7,13 @@ def validate_battery_capacity(value):
     else:
         return value
 
+
 def validate_power_rating(value):
     if value < 1:
         raise ValidationError("Power rating must be at least 1")
     else:
         return value
+
 
 def validate_backup_time(value):
     if value < 1:

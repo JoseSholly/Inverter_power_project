@@ -10,7 +10,11 @@ def make_input(**overrides) -> V2CalculationInput:
         "system_voltage": 24.0,
         "battery_capacity": 200.0,
         "solar_panel_watt": 350.0,
-        "items": (LoadItem(1, 75.0, 5.0), LoadItem(1, 120.0, 4.0), LoadItem(8, 7.0, 7.0)),
+        "items": (
+            LoadItem(1, 75.0, 5.0),
+            LoadItem(1, 120.0, 4.0),
+            LoadItem(8, 7.0, 7.0),
+        ),
     }
     data.update(overrides)
     return V2CalculationInput(**data)
@@ -57,7 +61,10 @@ class V1V2ConsistencyTests(SimpleTestCase):
                             battery_capacity=200.0,
                             system_voltage=float(voltage),
                             solar_panel_watt=350.0,
-                            items=tuple(LoadItem(q, float(p), float(backup_time)) for q, p in loads),
+                            items=tuple(
+                                LoadItem(q, float(p), float(backup_time))
+                                for q, p in loads
+                            ),
                         )
                     )
                     self.assertEqual(v1.__dict__, v2.__dict__)

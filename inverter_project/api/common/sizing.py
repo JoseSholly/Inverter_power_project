@@ -4,6 +4,7 @@ Each version decides how the energy demand is built (one backup time vs a
 backup time per appliance); from energy onward all versions use these
 formulas, so their results stay consistent. Pure Python, no Django imports.
 """
+
 from math import ceil
 
 POWER_FACTOR = 0.8
@@ -42,10 +43,15 @@ def battery_capacity_ah(energy_wh: float, system_voltage: float) -> float:
     through the inverter without discharging below the allowed depth."""
     if system_voltage <= 0:
         return 0.0
-    return round(energy_wh / (system_voltage * INVERTER_EFFICIENCY * BATTERY_DEPTH_OF_DISCHARGE), 2)
+    return round(
+        energy_wh / (system_voltage * INVERTER_EFFICIENCY * BATTERY_DEPTH_OF_DISCHARGE),
+        2,
+    )
 
 
-def number_of_batteries(bank_capacity_ah: float, battery_capacity_ah: float, system_voltage: float) -> int:
+def number_of_batteries(
+    bank_capacity_ah: float, battery_capacity_ah: float, system_voltage: float
+) -> int:
     """12V batteries needed: batteries in series per string x parallel strings."""
     if battery_capacity_ah <= 0 or system_voltage <= 0 or bank_capacity_ah <= 0:
         return 0
@@ -72,7 +78,9 @@ def array_current_a(panels: int, panel_watt: float, system_voltage: float) -> fl
     return round(panels * panel_watt / system_voltage, 2)
 
 
-def controller_current_a(panels: int, panel_watt: float, system_voltage: float) -> float:
+def controller_current_a(
+    panels: int, panel_watt: float, system_voltage: float
+) -> float:
     """Charge controller rating for the installed array, with safety headroom."""
     if system_voltage <= 0:
         return 0.0

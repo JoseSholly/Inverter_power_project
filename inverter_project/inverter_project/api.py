@@ -1,7 +1,13 @@
 """django-bolt entry point. Served by `python manage.py runbolt`."""
+
 from django_bolt import BoltAPI
 from django_bolt.logging import LoggingConfig
-from django_bolt.openapi import JsonRenderPlugin, OpenAPIConfig, RedocRenderPlugin, SwaggerRenderPlugin
+from django_bolt.openapi import (
+    JsonRenderPlugin,
+    OpenAPIConfig,
+    RedocRenderPlugin,
+    SwaggerRenderPlugin,
+)
 from django_bolt.responses import Redirect
 
 from api.common.logging import log_exception

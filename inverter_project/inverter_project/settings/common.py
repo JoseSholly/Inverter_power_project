@@ -20,15 +20,14 @@ def env_list(name: str, default: str = "") -> list[str]:
 
 
 INSTALLED_APPS = [
-    'jazzmin',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django_bolt',
-
+    "jazzmin",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django_bolt",
     # apps
     "power_calculator",
     "inverter_rating_v2",
@@ -39,53 +38,55 @@ INSTALLED_APPS = [
 BOLT_API = ["inverter_project.api:api"]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'inverter_project.urls'
+ROOT_URLCONF = "inverter_project.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'inverter_project.wsgi.application'
-ASGI_APPLICATION = 'inverter_project.asgi.application'
+WSGI_APPLICATION = "inverter_project.wsgi.application"
+ASGI_APPLICATION = "inverter_project.asgi.application"
 
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Cache. Local memory by default; prod.py switches to Redis when REDIS_URL is set
 # (a shared cache is needed for invalidation to reach every server process).

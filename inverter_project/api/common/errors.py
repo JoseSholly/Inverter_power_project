@@ -25,7 +25,9 @@ def unknown_appliance_to_validation_error(
     )
 
 
-def query_too_long_error(param: str, value: str, max_length: int) -> RequestValidationError:
+def query_too_long_error(
+    param: str, value: str, max_length: int
+) -> RequestValidationError:
     """422 for an over-long query parameter (Bolt doesn't enforce query constraints itself)."""
     return RequestValidationError(
         [

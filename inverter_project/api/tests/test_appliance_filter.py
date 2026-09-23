@@ -19,12 +19,14 @@ class ApplianceNameFilterTests(TestCase):
         self.addCleanup(self.client.__exit__, None, None, None)
 
     def names(self, query: str, version: str = "v1", slash: str = "/") -> list[str]:
-        response = self.client.get(f"/api/{version}/power_calculator/appliances{slash}{query}")
+        response = self.client.get(
+            f"/api/{version}/power_calculator/appliances{slash}{query}"
+        )
         self.assertEqual(response.status_code, 200, response.text)
         return [a["name"] for a in response.json()]
 
     def test_substring_case_insensitive_on_both_versions_and_paths(self):
-        expected = ["Standing Fan", "Ceiling Fan", "Fan"]  # newest first
+        expected = ["Ceiling Fan", "Fan", "Standing Fan"]  # alphabetical
         for version in ("v1", "v2"):
             for slash in ("/", ""):
                 for query in ("?name=fan", "?name=FAN", "?name=%20%20fAn%20"):
@@ -46,7 +48,14 @@ class ApplianceNameFilterTests(TestCase):
                 self.assertEqual(len(self.names(query)), len(NAMES))
 
     def test_too_long_filter_is_422(self):
-        response = self.client.get("/api/v2/power_calculator/appliances/?name=" + "a" * 101)
+        response = self.client.get(
+            "/api/v2/power_calculator/appliances/?name=" + "a" * 101
+        )
         self.assertEqual(response.status_code, 422)
         self.assertEqual(response.json()["detail"][0]["loc"], ["query", "name"])
-        self.assertEqual(self.client.get("/api/v2/power_calculator/appliances/?name=" + "a" * 100).status_code, 200)
+        self.assertEqual(
+            self.client.get(
+                "/api/v2/power_calculator/appliances/?name=" + "a" * 100
+            ).status_code,
+            200,
+        )

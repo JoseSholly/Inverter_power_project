@@ -1,4 +1,5 @@
 """v1 HTTP routes: translate schemas <-> service DTOs, nothing else."""
+
 from typing import Annotated
 
 from django_bolt import Router
@@ -6,7 +7,10 @@ from django_bolt.concurrency import sync_to_thread
 from django_bolt.params import Header, Query
 from django_bolt.responses import Response
 
-from api.common.appliance_endpoint import NAME_FILTER_DESCRIPTION, list_appliances_response
+from api.common.appliance_endpoint import (
+    NAME_FILTER_DESCRIPTION,
+    list_appliances_response,
+)
 from api.common.errors import unknown_appliance_to_validation_error
 from api.common.exceptions import UnknownApplianceError
 from api.common.routing import Routes
@@ -39,13 +43,18 @@ async def calculate(data: CalculationIn) -> CalculationOut:
         battery_capacity=data.battery_capacity,
         system_voltage=data.system_voltage,
         solar_panel_watt=data.solar_panel_watt,
-        items=tuple(V1ItemRequest(item.id, item.quantity, item.power_rating) for item in data.items),
+        items=tuple(
+            V1ItemRequest(item.id, item.quantity, item.power_rating)
+            for item in data.items
+        ),
     )
     try:
         # Services use the sync ORM, so run them off the event loop.
         result = await sync_to_thread(calculation_service.calculate, request)
     except UnknownApplianceError as exc:
-        raise unknown_appliance_to_validation_error(exc, [item.id for item in data.items]) from exc
+        raise unknown_appliance_to_validation_error(
+            exc, [item.id for item in data.items]
+        ) from exc
 
     output = result.output
     return CalculationOut(
@@ -61,7 +70,10 @@ async def calculate(data: CalculationIn) -> CalculationOut:
         battery_capacity=request.battery_capacity,
         system_voltage=request.system_voltage,
         solar_panel_watt=request.solar_panel_watt,
-        items=[ApplianceItemOut(i.id, i.name, i.quantity, i.power_rating) for i in result.items],
+        items=[
+            ApplianceItemOut(i.id, i.name, i.quantity, i.power_rating)
+            for i in result.items
+        ],
     )
 
 

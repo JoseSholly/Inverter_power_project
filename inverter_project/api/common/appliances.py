@@ -1,5 +1,6 @@
 """Appliance lookups for the API, served from the cached catalogue
 (power_calculator/cache.py), so warm requests don't touch the database."""
+
 from collections.abc import Iterable
 
 from power_calculator.cache import get_catalog
@@ -12,8 +13,8 @@ def _normalize(text: str) -> str:
 
 
 def list_appliances(name: str | None = None) -> list[tuple[int, str]]:
-    """(id, name) for every appliance, newest first; `name` keeps those whose
-    name contains it (case-insensitive, whitespace-trimmed). Blank means no filter.
+    """(id, name) for every appliance, alphabetically by name; `name` keeps those
+    whose name contains it (case-insensitive, whitespace-trimmed). Blank means no filter.
 
     Matching uses casefold() in Python rather than SQL icontains, whose case
     folding differs between databases (SQLite only folds ASCII).
@@ -22,8 +23,11 @@ def list_appliances(name: str | None = None) -> list[tuple[int, str]]:
     needle = _normalize(name or "")
     if not needle:
         return list(catalog)
-    return [(appliance_id, appliance_name) for appliance_id, appliance_name in catalog
-            if needle in _normalize(appliance_name)]
+    return [
+        (appliance_id, appliance_name)
+        for appliance_id, appliance_name in catalog
+        if needle in _normalize(appliance_name)
+    ]
 
 
 def get_appliance_names(ids: Iterable[int]) -> dict[int, str]:

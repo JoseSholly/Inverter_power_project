@@ -9,6 +9,7 @@ django-bolt's router has two behaviours we don't want for this API:
 slash form appears in the OpenAPI docs). `finalize()` then adds a 405
 handler, with an `Allow` header, for every other method on those paths.
 """
+
 from collections import defaultdict
 from collections.abc import Callable
 from typing import Any
@@ -59,7 +60,11 @@ class Routes:
             register = getattr(self.router, method.lower())
             primary, *aliases = _path_variants(path)
             register(primary, **kwargs)(handler)
-            alias_kwargs = {k: v for k, v in kwargs.items() if k not in ("name", "include_in_schema")}
+            alias_kwargs = {
+                k: v
+                for k, v in kwargs.items()
+                if k not in ("name", "include_in_schema")
+            }
             for alias in aliases:
                 register(alias, **alias_kwargs, include_in_schema=False)(handler)
             self._allowed[path].add(method)
@@ -77,5 +82,7 @@ class Routes:
                     continue
                 register = getattr(self.router, method.lower())
                 for variant in _path_variants(path):
-                    register(variant, include_in_schema=False)(_method_not_allowed_handler(allow))
+                    register(variant, include_in_schema=False)(
+                        _method_not_allowed_handler(allow)
+                    )
         return self.router

@@ -3,6 +3,7 @@
 Energy = total load x backup time; everything after that uses the shared
 sizing model in api/common/sizing.py. Pure Python, no Django or HTTP imports.
 """
+
 from dataclasses import dataclass
 
 from api.common import sizing
@@ -51,8 +52,12 @@ class V1Calculator:
             ),
             total_solar_panel_capacity_needed=array_capacity,
             numbers_of_solar_panel=panels,
-            total_current=sizing.array_current_a(panels, data.solar_panel_watt, data.system_voltage),
-            controller_current=sizing.controller_current_a(panels, data.solar_panel_watt, data.system_voltage),
+            total_current=sizing.array_current_a(
+                panels, data.solar_panel_watt, data.system_voltage
+            ),
+            controller_current=sizing.controller_current_a(
+                panels, data.solar_panel_watt, data.system_voltage
+            ),
         )
 
     @staticmethod

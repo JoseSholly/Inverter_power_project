@@ -26,8 +26,19 @@ class PopulateAppliancesTests(TestCase):
         run()
         first_id = Appliance.objects.order_by("id").first().id
         by_offset = {a.id - first_id + 1: a.name for a in Appliance.objects.all()}
-        expected = {1: "Wifi Router", 2: "Phone Charger", 3: "Fridge", 4: "TV", 8: "LED Light", 9: "Fan",
-                    11: "Laptop", 12: "Refrigerator", 15: "Washing Machine", 17: "Home Theater", 18: "Radio"}
+        expected = {
+            1: "Wifi Router",
+            2: "Phone Charger",
+            3: "Fridge",
+            4: "TV",
+            8: "LED Light",
+            9: "Fan",
+            11: "Laptop",
+            12: "Refrigerator",
+            15: "Washing Machine",
+            17: "Home Theater",
+            18: "Radio",
+        }
         for offset, name in expected.items():
             self.assertEqual(by_offset[offset], name)
 
@@ -35,7 +46,10 @@ class PopulateAppliancesTests(TestCase):
         output = run("--dry-run")
         self.assertEqual(Appliance.objects.count(), 0)
         self.assertIn("[dry run] Would add: LED Light", output)
-        self.assertIn(f"[dry run] {len(DEFAULT_APPLIANCES)} would be added, 0 already present", output)
+        self.assertIn(
+            f"[dry run] {len(DEFAULT_APPLIANCES)} would be added, 0 already present",
+            output,
+        )
 
     def test_is_idempotent(self):
         run()
@@ -48,10 +62,14 @@ class PopulateAppliancesTests(TestCase):
         Appliance.objects.create(name="My Custom Heater")
         output = run("--dry-run")
         self.assertNotIn("Would add: LED Light", output)
-        self.assertIn(f"{len(DEFAULT_APPLIANCES) - 1} would be added, 1 already present", output)
+        self.assertIn(
+            f"{len(DEFAULT_APPLIANCES) - 1} would be added, 1 already present", output
+        )
         run()
         self.assertEqual(Appliance.objects.filter(name__iexact="led light").count(), 0)
-        self.assertEqual(Appliance.objects.count(), len(DEFAULT_APPLIANCES) + 1)  # custom one kept
+        self.assertEqual(
+            Appliance.objects.count(), len(DEFAULT_APPLIANCES) + 1
+        )  # custom one kept
 
     def test_verbosity_2_lists_existing(self):
         run()
@@ -63,9 +81,12 @@ class PopulateAppliancesTests(TestCase):
         self.assertTrue(all(normalized))
 
     def test_invalid_catalog_aborts_without_writing(self):
-        with mock.patch(
-            "power_calculator.management.commands.populate_appliances.DEFAULT_APPLIANCES", ("Fan", "fan")
+        with (
+            mock.patch(
+                "power_calculator.management.commands.populate_appliances.DEFAULT_APPLIANCES",
+                ("Fan", "fan"),
+            ),
+            self.assertRaisesMessage(CommandError, "Duplicate appliance in catalog"),
         ):
-            with self.assertRaisesMessage(CommandError, "Duplicate appliance in catalog"):
-                run()
+            run()
         self.assertEqual(Appliance.objects.count(), 0)

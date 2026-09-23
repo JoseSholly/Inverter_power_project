@@ -27,7 +27,10 @@ class Command(BaseCommand):
         verbosity = options.get("verbosity", 1)
         catalog = self._validated_catalog()
 
-        existing = {_normalize(name) for name in Appliance.objects.values_list("name", flat=True)}
+        existing = {
+            _normalize(name)
+            for name in Appliance.objects.values_list("name", flat=True)
+        }
         to_create = [name for name in catalog if _normalize(name) not in existing]
         already_present = len(catalog) - len(to_create)
 
@@ -54,7 +57,9 @@ class Command(BaseCommand):
             f"{len(to_create)} {'would be added' if dry_run else 'added'}, "
             f"{already_present} already present, {len(catalog)} in catalog."
         )
-        self.stdout.write(self.style.NOTICE(summary) if dry_run else self.style.SUCCESS(summary))
+        self.stdout.write(
+            self.style.NOTICE(summary) if dry_run else self.style.SUCCESS(summary)
+        )
 
     @staticmethod
     def _validated_catalog() -> list[str]:

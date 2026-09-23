@@ -1,4 +1,5 @@
 """v2 calculation service: resolves appliances and runs the v2 calculator."""
+
 from dataclasses import dataclass
 
 from api.common.appliances import get_appliance_names
@@ -50,7 +51,8 @@ class V2CalculationService:
                 system_voltage=request.system_voltage,
                 solar_panel_watt=request.solar_panel_watt,
                 items=tuple(
-                    LoadItem(item.quantity, item.power_rating, item.backup_time) for item in request.items
+                    LoadItem(item.quantity, item.power_rating, item.backup_time)
+                    for item in request.items
                 ),
             )
         )

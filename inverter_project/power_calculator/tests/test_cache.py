@@ -8,7 +8,12 @@ from django.test import TestCase, override_settings
 from power_calculator import cache as appliance_cache
 from power_calculator.models import Appliance
 
-LOCMEM = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "cache-tests"}}
+LOCMEM = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "cache-tests",
+    }
+}
 
 
 @override_settings(CACHES=LOCMEM)
@@ -24,7 +29,9 @@ class ApplianceCacheTests(TestCase):
         with self.assertNumQueries(0):
             second = appliance_cache.get_catalog()
         self.assertEqual(first, second)
-        self.assertEqual(first, ((self.tv.id, "TV"), (self.fan.id, "Fan")))  # newest first
+        self.assertEqual(
+            first, ((self.fan.id, "Fan"), (self.tv.id, "TV"))
+        )  # alphabetical
 
     def test_create_rename_and_delete_invalidate(self):
         appliance_cache.get_catalog()
@@ -61,7 +68,9 @@ class ApplianceCacheTests(TestCase):
         def slow_load():
             rows = real_load()  # reader has the old rows...
             if not state:
-                state["kettle"] = Appliance.objects.create(name="Kettle")  # ...a write lands...
+                state["kettle"] = Appliance.objects.create(
+                    name="Kettle"
+                )  # ...a write lands...
             return rows  # ...and the reader stores stale data
 
         with mock.patch.object(appliance_cache, "_load_from_db", side_effect=slow_load):
@@ -90,12 +99,20 @@ class ApplianceCacheTests(TestCase):
         self.assertEqual(dict(appliance_cache.get_catalog())[self.tv.id], "Television")
 
     def test_cache_backend_failure_falls_back_to_database(self):
-        with mock.patch.object(appliance_cache.cache, "get", side_effect=ConnectionError("redis down")):
-            with self.assertLogs("power_calculator.cache", level="WARNING"):
-                catalog = appliance_cache.get_catalog()
+        with (
+            mock.patch.object(
+                appliance_cache.cache, "get", side_effect=ConnectionError("redis down")
+            ),
+            self.assertLogs("power_calculator.cache", level="WARNING"),
+        ):
+            catalog = appliance_cache.get_catalog()
         self.assertEqual(dict(catalog), {self.fan.id: "Fan", self.tv.id: "TV"})
 
     def test_invalidate_survives_backend_failure(self):
-        with mock.patch.object(appliance_cache.cache, "incr", side_effect=ConnectionError("redis down")):
-            with self.assertLogs("power_calculator.cache", level="WARNING"):
-                appliance_cache.invalidate()
+        with (
+            mock.patch.object(
+                appliance_cache.cache, "incr", side_effect=ConnectionError("redis down")
+            ),
+            self.assertLogs("power_calculator.cache", level="WARNING"),
+        ):
+            appliance_cache.invalidate()
