@@ -1,0 +1,61 @@
+"""Default appliances loaded by `manage.py populate_appliances`.
+
+Order matters: on a fresh database the IDs follow this list, and the README
+examples and scenarios reference those IDs (e.g. 8 = LED Light, 11 = Laptop).
+Only ever append new names; never reorder or remove existing ones.
+"""
+
+DEFAULT_APPLIANCES: tuple[str, ...] = (
+    # Original set (IDs 1-25 on a fresh database)
+    "Wifi Router",
+    "Phone Charger",
+    "Fridge",
+    "TV",
+    "Microwave Oven",
+    "Tungsten Bulb",
+    "Tube Light",
+    "LED Light",
+    "Fan",
+    "Desktop Computer",
+    "Laptop",
+    "Refrigerator",
+    "Air Conditioner (AC)",
+    "Toaster",
+    "Washing Machine",
+    "Gaming Console",
+    "Home Theater",
+    "Radio",
+    "Wifi-Router",
+    "Electric Blender",
+    "Electric Kettle",
+    "Printer",
+    "Phone",
+    "Security Cameras",
+    "Electric shaver",
+    # Added
+    "Ceiling Fan",
+    "Standing Fan",
+    "Chest Freezer",
+    "Water Dispenser",
+    "Water Pump",
+    "Electric Iron",
+    "Rice Cooker",
+    "Air Fryer",
+    "Electric Cooker",
+    "Induction Cooker",
+    "Coffee Maker",
+    "Sandwich Maker",
+    "Dishwasher",
+    "Clothes Dryer",
+    "Water Heater",
+    "Hair Dryer",
+    "Vacuum Cleaner",
+    "Satellite Decoder",
+    "Sound System",
+    "Projector",
+    "Computer Monitor",
+    "Smart Speaker",
+    "CCTV Recorder (DVR/NVR)",
+    "Electric Fence",
+    "Aquarium Pump",
+)

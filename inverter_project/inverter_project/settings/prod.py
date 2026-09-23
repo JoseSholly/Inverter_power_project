@@ -1,79 +1,56 @@
-from .common import *
-from dotenv import load_dotenv
-from urllib.parse import urlparse
+import dj_database_url
 from decouple import config
-import os
 
+from .common import *  # noqa: F403
+from .common import BASE_DIR, env_list
 
-load_dotenv()
+DEBUG = False
 
-SECRET_KEY = config("SECRET_KEY", cast=str)
-
-DEBUG= False
-
-ALLOWED_HOSTS=['127.0.0.1', 'localhost']
-
-allowed_host_value= os.getenv("ALLOWED_HOSTS")
-
-if allowed_host_value:
-    ALLOWED_HOSTS.append(allowed_host_value)
-
-
-
-# Replace the DATABASES section of your settings.py with this
-tmpPostgres = urlparse(config("DATABASE_URL", cast=str))
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", *env_list("ALLOWED_HOSTS")]
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': tmpPostgres.path.replace('/', ''),
-        'USER': tmpPostgres.username,
-        'PASSWORD': tmpPostgres.password,
-        'HOST': tmpPostgres.hostname,
-        'PORT': 5432,
-    }
+    'default': dj_database_url.parse(config("DATABASE_URL"), conn_max_age=600),
 }
 
- 
-# CSRF_TRUSTED_ORIGINS= os.getenv("CSRF_TRUSTED_ORIGINS").split(",")
+REDIS_URL = config("REDIS_URL", default="")
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+            "KEY_PREFIX": "inverter",
+            # Fail fast if Redis is unreachable; the API then reads from the database.
+            "OPTIONS": {"socket_connect_timeout": 1, "socket_timeout": 1},
+        }
+    }
+# Without REDIS_URL the local-memory cache from common.py stays in place and
+# `manage.py check --deploy` warns (power_calculator.W001).
 
-if not DEBUG:
-    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
 
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+CORS_ALLOW_CREDENTIALS = True
 
-    WHITENOISE_AUTOREFRESH = True
-    WHITENOISE_USE_FINDERS = True
-    WHITENOISE_COMPRESS = True
-    WHITENOISE_MANIFEST_STRICT = True 
-
-
-CORS_ALLOW_ALL_ORIGINS = False
-
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(",")
-
-CORS_ALLOW_CREDENTIALS = True 
-
-SESSION_COOKIE_SECURE= True
-
-CSRF_COOKIE_SECURE= True
-
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
+        'console': {'class': 'logging.StreamHandler'},
         'file': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'debug.log',  # Change the path as needed
+            'filename': BASE_DIR / 'debug.log',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
-            'propagate': True,
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
         },
     },
 }
