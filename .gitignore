@@ -8,3 +8,6 @@ __pycache__/
 *.env
 *.txt
 /Doc/
+.venv/
+inverter_project/inverter_project/staticfiles/
+staticfiles/

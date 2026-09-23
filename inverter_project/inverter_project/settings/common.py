@@ -42,17 +42,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
+    'django_bolt',
 
     # apps
     "power_calculator",
     "inverter_rating_v2",
-    "rest_framework",
     "api",
-    "rest_framework_swagger",
-   'drf_yasg',
-   'corsheaders',
-    
 ]
+
+# django-bolt API instance served by `manage.py runbolt`
+BOLT_API = ["inverter_project.api:api"]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

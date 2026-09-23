@@ -1,0 +1,56 @@
+"""v2 HTTP routes: translate schemas <-> service DTOs, nothing else."""
+from django_bolt import Router
+from django_bolt.concurrency import sync_to_thread
+
+from api.common.appliances import list_appliances
+from api.common.errors import unknown_appliance_to_validation_error
+from api.common.exceptions import UnknownApplianceError
+from api.common.schemas import ApplianceOut
+
+from .schemas import ApplianceItemOut, CalculationIn, CalculationOut
+from .services import V2CalculationRequest, V2CalculationService, V2ItemRequest
+
+router = Router(tags=["v2"])
+calculation_service = V2CalculationService()
+
+
+@router.get("/appliances/", name="v2-appliances")
+async def appliances() -> list[ApplianceOut]:
+    """List all appliances that can be referenced by ID in a calculation."""
+    return [ApplianceOut(id=a.id, name=a.name) for a in await sync_to_thread(list_appliances)]
+
+
+@router.post("/calculate/", name="v2-calculate", status_code=200)
+async def calculate(data: CalculationIn) -> CalculationOut:
+    """
+    Size an inverter, battery bank and solar array for a list of appliances.
+    Each appliance has its own backup_time. Nothing is stored.
+    """
+    request = V2CalculationRequest(
+        system_voltage=data.system_voltage,
+        battery_capacity=data.battery_capacity,
+        solar_panel_watt=data.solar_panel_watt,
+        items=tuple(
+            V2ItemRequest(item.id, item.quantity, item.power_rating, item.backup_time) for item in data.items
+        ),
+    )
+    try:
+        # Services use the sync ORM, so run them off the event loop.
+        result = await sync_to_thread(calculation_service.calculate, request)
+    except UnknownApplianceError as exc:
+        raise unknown_appliance_to_validation_error(exc) from exc
+
+    output = result.output
+    return CalculationOut(
+        system_voltage=request.system_voltage,
+        battery_capacity=request.battery_capacity,
+        solar_panel_watt=request.solar_panel_watt,
+        total_load=output.total_load,
+        inverter_rating=output.inverter_rating,
+        total_battery_capacity=output.total_battery_capacity,
+        numbers_of_batteries=output.numbers_of_batteries,
+        total_solar_panel_capacity_needed=output.total_solar_panel_capacity_needed,
+        numbers_of_solar_panel=output.numbers_of_solar_panel,
+        controller_current=output.controller_current,
+        items=[ApplianceItemOut(i.id, i.name, i.quantity, i.power_rating, i.backup_time) for i in result.items],
+    )
