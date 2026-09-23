@@ -54,7 +54,7 @@ inverter_project/
 │   │   └── routes.py             # HTTP routes: schema -> service -> response
 │   ├── v2/                       # same layout as v1, fully independent
 │   └── tests/
-└── power_calculator/             # Appliance model, admin, populate_appliances command
+└── power_calculator/             # Appliance model, admin, appliance catalog, populate_appliances command
 ```
 
 Each version is built in layers:
@@ -106,8 +106,29 @@ CSRF_TRUSTED_ORIGINS=http://localhost:3000
 ### 4. Create the database and load appliances
 ```bash
 uv run python manage.py migrate
-uv run python manage.py populate_appliances
-uv run python manage.py createsuperuser   # optional, for /admin/
+uv run python manage.py populate_appliances --dry-run   # preview, writes nothing
+uv run python manage.py populate_appliances             # add the default appliances
+uv run python manage.py createsuperuser                 # optional, for /admin/
+```
+
+`populate_appliances` adds the 50 default appliances listed in `power_calculator/appliance_catalog.py` (lights, fans, fridge/freezer, TV, kitchen appliances, pumps, AC and more):
+
+| Option | Effect |
+|---|---|
+| `--dry-run` | Lists what would be added and prints a summary. Nothing is written |
+| `-v 2` | Also lists the appliances that already exist |
+| `-v 0` | Prints only the summary |
+
+- **Safe to re-run:** appliances that already exist are skipped. Names match regardless of case and extra spaces, so `led light` counts as `LED Light`. Appliances you added yourself are never changed or removed.
+- **All or nothing:** everything is added in one transaction, so a failure never leaves a half-filled table.
+- **Stable IDs:** on a fresh database, IDs follow the catalog order. The examples below rely on this (e.g. 8 = LED Light, 11 = Laptop). To add appliances, append them to the end of the catalog.
+
+Example output:
+```text
+$ uv run python manage.py populate_appliances --dry-run
+[dry run] Would add: Ceiling Fan
+...
+[dry run] 25 would be added, 25 already present, 50 in catalog.
 ```
 
 ### 5. Run the server
