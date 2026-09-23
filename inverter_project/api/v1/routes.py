@@ -16,7 +16,7 @@ from api.common.exceptions import UnknownApplianceError
 from api.common.routing import Routes
 from api.common.schemas import ApplianceOut
 
-from .schemas import ApplianceItemOut, CalculationIn, CalculationOut
+from .schemas import V1ApplianceItemOut, V1CalculationIn, V1CalculationOut
 from .services import V1CalculationRequest, V1CalculationService, V1ItemRequest
 
 routes = Routes(Router(tags=["v1"]))
@@ -24,7 +24,7 @@ calculation_service = V1CalculationService()
 
 
 @routes.get("/appliances/", name="v1-appliances", response_model=list[ApplianceOut])
-async def appliances(
+async def v1_appliances(
     name: Annotated[str | None, Query(description=NAME_FILTER_DESCRIPTION)] = None,
     if_none_match: Annotated[str | None, Header(alias="If-None-Match")] = None,
 ) -> Response:
@@ -33,7 +33,7 @@ async def appliances(
 
 
 @routes.post("/calculate/", name="v1-calculate", status_code=200)
-async def calculate(data: CalculationIn) -> CalculationOut:
+async def v1_calculate(data: V1CalculationIn) -> V1CalculationOut:
     """
     Size an inverter, battery bank and solar array for a list of appliances.
     A single backup_time applies to every appliance.
@@ -57,7 +57,7 @@ async def calculate(data: CalculationIn) -> CalculationOut:
         ) from exc
 
     output = result.output
-    return CalculationOut(
+    return V1CalculationOut(
         total_load=output.total_load,
         inverter_rating=output.inverter_rating,
         total_battery_capacity=output.total_battery_capacity,
@@ -71,7 +71,7 @@ async def calculate(data: CalculationIn) -> CalculationOut:
         system_voltage=request.system_voltage,
         solar_panel_watt=request.solar_panel_watt,
         items=[
-            ApplianceItemOut(i.id, i.name, i.quantity, i.power_rating)
+            V1ApplianceItemOut(i.id, i.name, i.quantity, i.power_rating)
             for i in result.items
         ],
     )

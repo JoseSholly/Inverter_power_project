@@ -38,7 +38,7 @@ _EXAMPLE_ITEMS_OUT = [
 ]
 
 
-class ApplianceItemIn(msgspec.Struct):
+class V2ApplianceItemIn(msgspec.Struct):
     id: Annotated[
         int,
         Meta(
@@ -69,7 +69,7 @@ class ApplianceItemIn(msgspec.Struct):
     ]
 
 
-class CalculationIn(msgspec.Struct):
+class V2CalculationIn(msgspec.Struct):
     system_voltage: Annotated[
         float,
         Meta(
@@ -99,7 +99,7 @@ class CalculationIn(msgspec.Struct):
         ),
     ]
     items: Annotated[
-        list[ApplianceItemIn],
+        list[V2ApplianceItemIn],
         Meta(
             min_length=1,
             max_length=MAX_ITEMS,
@@ -109,7 +109,7 @@ class CalculationIn(msgspec.Struct):
     ]
 
 
-class ApplianceItemOut(msgspec.Struct):
+class V2ApplianceItemOut(msgspec.Struct):
     id: Annotated[int, Meta(examples=[1])]
     name: Annotated[str, Meta(examples=["LED Light"])]
     quantity: Annotated[int, Meta(examples=[2])]
@@ -117,7 +117,7 @@ class ApplianceItemOut(msgspec.Struct):
     backup_time: Annotated[float, Meta(examples=[8.0])]
 
 
-class CalculationOut(msgspec.Struct):
+class V2CalculationOut(msgspec.Struct):
     system_voltage: Annotated[float, Meta(examples=[24])]
     battery_capacity: Annotated[float, Meta(examples=[200])]
     solar_panel_watt: Annotated[float, Meta(examples=[400])]
@@ -129,13 +129,4 @@ class CalculationOut(msgspec.Struct):
     numbers_of_solar_panel: Annotated[int, Meta(examples=[3])]
     total_current: Annotated[float, Meta(examples=[42.5])]
     controller_current: Annotated[float, Meta(examples=[53.13])]
-    items: Annotated[list[ApplianceItemOut], Meta(examples=[_EXAMPLE_ITEMS_OUT])]
-
-
-# Version-prefix the OpenAPI titles so Swagger UI doesn't dedupe v1/v2 schemas
-# by their short class name (which collapses each endpoint's example onto the
-# other's shape).
-for _cls in (ApplianceItemIn, CalculationIn, ApplianceItemOut, CalculationOut):
-    _cls.__name__ = f"V2{_cls.__name__}"
-    _cls.__qualname__ = _cls.__name__
-del _cls
+    items: Annotated[list[V2ApplianceItemOut], Meta(examples=[_EXAMPLE_ITEMS_OUT])]

@@ -28,7 +28,7 @@ _EXAMPLE_ITEMS_OUT = [
 ]
 
 
-class ApplianceItemIn(msgspec.Struct):
+class V1ApplianceItemIn(msgspec.Struct):
     id: Annotated[
         int,
         Meta(
@@ -50,7 +50,7 @@ class ApplianceItemIn(msgspec.Struct):
     ] = 1
 
 
-class CalculationIn(msgspec.Struct):
+class V1CalculationIn(msgspec.Struct):
     backup_time: Annotated[
         int,
         Meta(
@@ -73,7 +73,7 @@ class CalculationIn(msgspec.Struct):
         Meta(description="Rating of one solar panel in W.", examples=[400]),
     ]
     items: Annotated[
-        list[ApplianceItemIn],
+        list[V1ApplianceItemIn],
         Meta(
             min_length=1,
             max_length=MAX_ITEMS,
@@ -83,14 +83,14 @@ class CalculationIn(msgspec.Struct):
     ]
 
 
-class ApplianceItemOut(msgspec.Struct):
+class V1ApplianceItemOut(msgspec.Struct):
     id: Annotated[int, Meta(examples=[1])]
     name: Annotated[str, Meta(examples=["LED Light"])]
     quantity: Annotated[int, Meta(examples=[2])]
     power_rating: Annotated[int, Meta(examples=[60])]
 
 
-class CalculationOut(msgspec.Struct):
+class V1CalculationOut(msgspec.Struct):
     total_load: Annotated[int, Meta(examples=[1020])]
     inverter_rating: Annotated[float, Meta(examples=[1275.0])]
     total_battery_capacity: Annotated[float, Meta(examples=[425.0])]
@@ -103,13 +103,4 @@ class CalculationOut(msgspec.Struct):
     battery_capacity: Annotated[int, Meta(examples=[200])]
     system_voltage: Annotated[int, Meta(examples=[24])]
     solar_panel_watt: Annotated[int, Meta(examples=[400])]
-    items: Annotated[list[ApplianceItemOut], Meta(examples=[_EXAMPLE_ITEMS_OUT])]
-
-
-# Version-prefix the OpenAPI titles so Swagger UI doesn't dedupe v1/v2 schemas
-# by their short class name (which collapses each endpoint's example onto the
-# other's shape).
-for _cls in (ApplianceItemIn, CalculationIn, ApplianceItemOut, CalculationOut):
-    _cls.__name__ = f"V1{_cls.__name__}"
-    _cls.__qualname__ = _cls.__name__
-del _cls
+    items: Annotated[list[V1ApplianceItemOut], Meta(examples=[_EXAMPLE_ITEMS_OUT])]
