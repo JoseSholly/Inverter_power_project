@@ -87,6 +87,20 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Cache. Local memory by default; prod.py switches to Redis when REDIS_URL is set
+# (a shared cache is needed for invalidation to reach every server process).
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "inverter-default",
+    }
+}
+APPLIANCE_CACHE_TIMEOUT = config("APPLIANCE_CACHE_TIMEOUT", default=3600, cast=int)
+"""Seconds a cached appliance catalogue lives; a safety net, since changes invalidate it."""
+
+# Isolates tests from each other's cache entries (see inverter_project/test_runner.py).
+TEST_RUNNER = "inverter_project.test_runner.CacheIsolatingTestRunner"
+
 # CORS for the API. django-bolt reads these settings directly.
 CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")

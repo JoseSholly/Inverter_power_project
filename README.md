@@ -19,6 +19,7 @@ Apart from how energy demand is worked out, both versions use the **same sizing 
 - [Examples](#examples)
 - [Calculation Formulas](#calculation-formulas)
 - [Worked Scenarios](#worked-scenarios)
+- [Caching](#caching)
 - [Running Tests](#running-tests)
 - [Deployment](#deployment)
 - [Changes from the DRF Version](#changes-from-the-drf-version)
@@ -30,6 +31,7 @@ Apart from how energy demand is worked out, both versions use the **same sizing 
 - **[uv](https://docs.astral.sh/uv/)**: dependency and virtual-environment management
 - **SQLite** in development, **PostgreSQL** in production (via `DATABASE_URL`)
 - **WhiteNoise** for static files
+- **Redis** (optional, recommended in production) for the shared cache
 
 ## Project Structure
 ```
@@ -42,7 +44,8 @@ inverter_project/
 │   └── settings/{common,dev,prod}.py
 ├── api/
 │   ├── common/                   # shared by both versions
-│   │   ├── appliances.py         # appliance lookup (single query) + listing
+│   │   ├── appliances.py         # appliance lookup + name filter (served from the cache)
+│   │   ├── appliance_endpoint.py # shared appliance list handler (filter, ETag/304)
 │   │   ├── exceptions.py         # UnknownApplianceError (domain error)
 │   │   ├── errors.py             # domain error -> 422 response
 │   │   ├── sizing.py             # shared sizing model: constants + formulas (pure)
@@ -54,7 +57,8 @@ inverter_project/
 │   │   └── routes.py             # HTTP routes: schema -> service -> response
 │   ├── v2/                       # same layout as v1, fully independent
 │   └── tests/
-└── power_calculator/             # Appliance model, admin, appliance catalog, populate_appliances command
+└── power_calculator/             # Appliance model, admin, appliance catalog, cache (+ invalidation signals),
+                                  # populate_appliances / clear_appliance_cache commands
 ```
 
 Each version is built in layers:
@@ -102,6 +106,8 @@ CSRF_TRUSTED_ORIGINS=http://localhost:3000
 | `CORS_ALLOWED_ORIGINS` | no | Origins allowed to call the API from a browser |
 | `CSRF_TRUSTED_ORIGINS` | no | Origins trusted for CSRF (admin) |
 | `DATABASE_URL` | prod only | PostgreSQL connection URL |
+| `REDIS_URL` | recommended in prod | Redis for the shared cache, e.g. `redis://host:6379/0`. Without it each server process caches separately (see [Caching](#caching)) |
+| `APPLIANCE_CACHE_TIMEOUT` | no | Seconds a cached appliance list lives (default `3600`); changes invalidate it sooner |
 
 ### 4. Create the database and load appliances
 ```bash
@@ -525,6 +531,41 @@ Response `200 OK` (items abbreviated):
 - Use **v1** for a quick estimate when everything should last the same time. Use **v2** when appliances run for different lengths of time, which gives a tighter, more realistic size.
 - If you give every v2 item the same backup time as v1 (6 h), v2 returns exactly the v1 numbers.
 
+## Caching
+Appliances change rarely, but both the appliance list and every calculation need them. So the whole appliance list (`id`, `name`) is cached as **one entry** (`power_calculator/cache.py`). Once the cache is warm, `GET /appliances/` (with or without `?name=`) and both `calculate` endpoints make **no database queries**.
+
+**Where it's stored**
+
+| Environment | Backend |
+|---|---|
+| Production with `REDIS_URL` | Redis, shared by every `runbolt` process and server |
+| Production without `REDIS_URL` | Memory of each process. `manage.py check --deploy` warns (`power_calculator.W001`), because a change only reaches the process that made it |
+| Development | Memory of each process |
+| Tests | A no-op cache, so tests never see each other's data. Caching tests switch a real cache on explicitly |
+
+**Invalidation.** Every change to an appliance bumps a version number. Readers only use the entry for the current version, so the next request re-reads the database:
+- **Automatic:** creating, editing or deleting an appliance through the model: the admin (including bulk "delete selected"), `Appliance.objects.create()`, `.save()`, `.delete()`, `QuerySet.delete()`, and `populate_appliances`.
+- **When:** immediately, and again when the database transaction commits. Using a version number, rather than deleting the entry, also closes a race: a slow reader that loaded old rows before a change can't overwrite the fresh data.
+- **Manual:** `QuerySet.update()`, `bulk_create()` and raw SQL don't send model signals. After those, run:
+  ```bash
+  uv run python manage.py clear_appliance_cache
+  ```
+- **Safety net:** entries expire after `APPLIANCE_CACHE_TIMEOUT` seconds (default 1 hour) anyway.
+
+**If Redis goes down,** requests keep working from the database and a warning is logged. The Redis client gives up after 1 second, so an outage slows requests only briefly.
+
+**HTTP caching.** The appliance endpoints send:
+- `ETag`: a fingerprint of the exact response, which differs per `?name=` filter
+- `Cache-Control: no-cache`: clients may keep the response but must check it's still current
+
+Send the ETag back in `If-None-Match` to get **`304 Not Modified`** with an empty body when nothing changed. Because `no-cache` forces a check every time, clients see appliance changes immediately.
+```bash
+curl -i http://127.0.0.1:8000/api/v1/power_calculator/appliances/
+# ETag: "d746c5a14ee5509808d81a3bbd772dbc"
+curl -i -H 'If-None-Match: "d746c5a14ee5509808d81a3bbd772dbc"' http://127.0.0.1:8000/api/v1/power_calculator/appliances/
+# HTTP/1.1 304 Not Modified
+```
+
 ## Running Tests
 ```bash
 cd inverter_project
@@ -536,6 +577,7 @@ The suite covers each version's calculator (pure unit tests), each service (with
 - Use **Python 3.12+** on the host.
 - Install: `uv sync --frozen --no-dev`. If your platform needs a `requirements.txt`, generate one with `uv export --no-dev --frozen -o requirements.txt`.
 - Set `DJANGO_SETTINGS_MODULE=inverter_project.settings.prod`, `SECRET_KEY`, `DATABASE_URL`, `ALLOWED_HOSTS` and `CORS_ALLOWED_ORIGINS`.
+- Provision **Redis** and set `REDIS_URL`, so the cache is shared across processes. Run `manage.py check --deploy` to confirm there's no `power_calculator.W001` warning.
 - Build step:
   ```bash
   uv run python manage.py collectstatic --noinput
@@ -557,5 +599,6 @@ The suite covers each version's calculator (pure unit tests), each service (with
 - v2 `system_voltage` must be a multiple of 12 V, because batteries are 12 V units.
 - `items` must contain 1–100 appliances, and every numeric input has a realistic upper limit. Absurd values used to crash the server (500) or return nonsense.
 - The wrong HTTP method still returns **405** with an `Allow` header, as with DRF. Paths now also work **without the trailing slash**: DRF redirected them (301), and a POST was then lost.
+- New: `?name=` filter on the appliance endpoints, a Redis-backed appliance cache with automatic invalidation, and ETag/304 support.
 - The unknown-appliance error points at the exact item (`loc: ["body", "items", "<index>", "id"]`).
 - API docs moved to `/api/docs`. Dependencies are managed with uv. Python 3.12+ and Django 5.2 are required.

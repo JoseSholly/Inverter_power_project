@@ -1,7 +1,7 @@
 """v2 calculation service: resolves appliances and runs the v2 calculator."""
 from dataclasses import dataclass
 
-from api.common.appliances import get_appliances_by_ids
+from api.common.appliances import get_appliance_names
 
 from .calculator import LoadItem, V2CalculationInput, V2CalculationOutput, V2Calculator
 
@@ -43,7 +43,7 @@ class V2CalculationService:
         self.calculator = calculator or V2Calculator()
 
     def calculate(self, request: V2CalculationRequest) -> V2CalculationResult:
-        appliances = get_appliances_by_ids(item.appliance_id for item in request.items)
+        names = get_appliance_names(item.appliance_id for item in request.items)
         output = self.calculator.calculate(
             V2CalculationInput(
                 battery_capacity=request.battery_capacity,
@@ -57,7 +57,7 @@ class V2CalculationService:
         items = tuple(
             V2ResolvedItem(
                 id=item.appliance_id,
-                name=appliances[item.appliance_id].name,
+                name=names[item.appliance_id],
                 quantity=item.quantity,
                 power_rating=item.power_rating,
                 backup_time=item.backup_time,

@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from power_calculator.appliance_catalog import DEFAULT_APPLIANCES
+from power_calculator.cache import invalidate
 from power_calculator.models import Appliance
 
 
@@ -46,6 +47,7 @@ class Command(BaseCommand):
             with transaction.atomic():
                 for name in to_create:
                     Appliance.objects.create(name=name)
+            invalidate()  # signals already did this per row; one explicit bump for clarity
 
         summary = (
             f"{'[dry run] ' if dry_run else ''}"
