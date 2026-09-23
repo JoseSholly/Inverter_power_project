@@ -1,13 +1,16 @@
-/venv/
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.log
-*.pyc
-*.env
-*.txt
-/Doc/
+*.py[cod]
 .venv/
-inverter_project/inverter_project/staticfiles/
+/venv/
+
+# Environment / secrets
+.env
+*.env
+
+# Django
+*.log
 staticfiles/
+media/
+
+/Doc/
