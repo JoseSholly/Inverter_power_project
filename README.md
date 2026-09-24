@@ -589,6 +589,43 @@ The suite covers each version's calculator (pure unit tests), each service (with
   ```
   `runbolt` serves the API, the docs, the admin and static files. You don't need gunicorn or uvicorn.
 
+### Docker
+A `Dockerfile` and `.dockerignore` at the repo root produce a self-contained image that runs `migrate` and starts `runbolt` on `$PORT` (default `8000`). Static files are collected at build time and served by WhiteNoise.
+
+Build and run locally:
+```bash
+docker build -t inverter-power:local .
+docker run --rm -p 8000:8000 \
+  -e SECRET_KEY=dev \
+  -e DATABASE_URL=sqlite:///db.sqlite3 \
+  -e ALLOWED_HOSTS=localhost \
+  inverter-power:local
+```
+Open http://localhost:8000/ — it redirects to `/api/docs`.
+
+Push to Docker Hub (replace `<user>` with your Docker Hub namespace):
+```bash
+docker build -t <user>/inverter-power:latest .
+docker login
+docker push <user>/inverter-power:latest
+```
+
+### Render (Existing Image)
+1. Provision Postgres (Render, Neon, Supabase or similar) and copy its connection URL.
+2. In Render, create a **New Web Service** → **Existing Image** and set the image URL to `docker.io/<user>/inverter-power:latest`.
+3. Set the environment variables:
+
+   | Key | Value |
+   |---|---|
+   | `SECRET_KEY` | any long random string |
+   | `DATABASE_URL` | Postgres connection URL |
+   | `ALLOWED_HOSTS` | `your-service.onrender.com` |
+   | `CSRF_TRUSTED_ORIGINS` | `https://your-service.onrender.com` |
+   | `REDIS_URL` | optional; add a Render Key Value or external Redis for a shared cache |
+
+   `DJANGO_SETTINGS_MODULE` is baked into the image as `inverter_project.settings.prod`, and Render injects `PORT` automatically.
+4. First deploy: open the Render **Shell** and run `python manage.py createsuperuser` to access `/admin/`, then `python manage.py populate_appliances` to load the default catalogue.
+
 ## Changes from the DRF Version
 - The API runs on **django-bolt** instead of Django REST Framework. Request and response bodies are the same shape as before.
 - Validation errors return **422** in the format above (DRF returned 400 with a different body).
