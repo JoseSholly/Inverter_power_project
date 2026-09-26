@@ -1,0 +1,307 @@
+{
+    "system_voltage": 24.0,
+    "battery_capacity": 200.0,
+    "solar_panel_watt": 350.0,
+    "items": [
+        {
+            "id": 1,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 2,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 3,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 4,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 5,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 6,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 7,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 8,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 9,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 10,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 11,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 12,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 13,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 14,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 15,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 16,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 17,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 18,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 19,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 20,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 21,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 22,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 23,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 24,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 25,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 26,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 27,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 28,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 29,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 30,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 31,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 32,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 33,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 34,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 35,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 36,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 37,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 38,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 39,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 40,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 41,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 42,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 43,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 44,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 45,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 46,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 47,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 48,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 49,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        },
+        {
+            "id": 50,
+            "quantity": 1,
+            "power_rating": 50.0,
+            "backup_time": 2.0
+        }
+    ]
+}

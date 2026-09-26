@@ -20,6 +20,7 @@ Apart from how energy demand is worked out, both versions use the **same sizing 
 - [Calculation Formulas](#calculation-formulas)
 - [Worked Scenarios](#worked-scenarios)
 - [Caching](#caching)
+- [Performance Benchmark](#performance-benchmark)
 - [Running Tests](#running-tests)
 - [Deployment](#deployment)
 - [Changes from the DRF Version](#changes-from-the-drf-version)
@@ -35,6 +36,8 @@ Apart from how energy demand is worked out, both versions use the **same sizing 
 
 ## Project Structure
 ```
+benchmarks/                       # DRF vs Bolt load-test tool, payloads and stored results
+examples/                         # sample request scripts
 inverter_project/
 ├── manage.py
 ├── pyproject.toml / uv.lock      # dependencies (managed by uv)
@@ -564,6 +567,81 @@ curl -i http://127.0.0.1:8000/api/v1/power_calculator/appliances/
 # ETag: "d746c5a14ee5509808d81a3bbd772dbc"
 curl -i -H 'If-None-Match: "d746c5a14ee5509808d81a3bbd772dbc"' http://127.0.0.1:8000/api/v1/power_calculator/appliances/
 # HTTP/1.1 304 Not Modified
+```
+
+## Performance Benchmark
+DRF vs django-bolt, measured on this project. Four builds ran on the same machine against identical SQLite databases, each holding the same 50 appliances.
+
+| Build | Code | Stack |
+|---|---|---|
+| **A**: DRF | original project (`f19d2e4`) | Django 4.2, DRF 3.15, gunicorn (2 sync workers) |
+| **A′**: DRF on Django 5.2 | same code as A | Django 5.2, DRF 3.18, gunicorn (2 sync workers). Rules out the Django upgrade as the cause |
+| **B**: Bolt, migration only | `978727e`, same responses as A | Django 5.2, django-bolt 0.11, `runbolt --processes 2` |
+| **C**: Bolt, current | `40bebdf`, with the appliance cache | same as B |
+
+### Results
+Throughput is in requests/second (higher is better). Latency is in milliseconds (lower is better). Each figure is the median of 3 runs of 20 s at 50 concurrent connections, after a 5 s warm-up. Every run had **0% errors**, and the runs varied by less than 5%.
+
+| Endpoint | A: DRF | A′: DRF (Django 5.2) | B: Bolt | C: Bolt + cache |
+|---|---|---|---|---|
+| `GET appliances/` | 855 req/s | 841 req/s | 1,574 req/s (**1.8×**) | 6,223 req/s (**7.3×**) |
+| `POST v1 calculate` (5 items) | 556 req/s | 519 req/s | 1,764 req/s (**3.2×**) | 7,206 req/s (**13×**) |
+| `POST v2 calculate` (3 items) | 719 req/s | 689 req/s | 1,898 req/s (**2.6×**) | 7,510 req/s (**10×**) |
+| `POST v2 calculate` (50 items) | 161 req/s | 161 req/s | 870 req/s (**5.4×**) | 3,466 req/s (**22×**) |
+
+Latency p50 / p95 / p99 (ms):
+
+| Endpoint | A: DRF | B: Bolt | C: Bolt + cache |
+|---|---|---|---|
+| `GET appliances/` | 58 / 66 / 77 | 30 / 52 / 65 | 7.7 / 12 / 15 |
+| `POST v1 calculate` (5 items) | 89 / 104 / 114 | 28 / 41 / 51 | 6.5 / 10 / 15 |
+| `POST v2 calculate` (3 items) | 68 / 79 / 88 | 25 / 41 / 52 | 6.5 / 9.7 / 13 |
+| `POST v2 calculate` (50 items) | 308 / 361 / 395 | 56 / 91 / 109 | 13 / 22 / 42 |
+
+Database queries per request, counted across all threads:
+
+| Endpoint | A: DRF | B: Bolt | C: Bolt + cache (warm) |
+|---|---|---|---|
+| `GET appliances/` | 1 | 1 | 0 |
+| `POST v1 calculate` (5 items) | 6 | 1 | 0 |
+| `POST v2 calculate` (3 items) | 3 | 1 | 0 |
+| `POST v2 calculate` (50 items) | 50 | 1 | 0 |
+
+Resources:
+
+| Build | Server memory (peak RSS, all processes) | CPU used |
+|---|---|---|
+| A: DRF | ~160 MB | ~2 cores (196%) |
+| B: Bolt | ~265 MB | ~2.2 cores (220%) |
+| C: Bolt + cache | ~290 MB | ~2 cores (200%) |
+
+### How to read this
+- **Framework alone: about 1.8×.** `GET appliances/` makes the same single query in A and B, so that row compares frameworks and nothing else. Median latency also halves (58 → 30 ms).
+- **Calculate endpoints: 2.6–5.4× (A → B).** These numbers mix Bolt with a query fix made during the migration. DRF looked up each appliance separately (up to 50 queries); B uses one query. The more items, the bigger the gap.
+- **Caching: another ~4× (B → C).** Warm requests make no database queries at all. Most of that gain would also help a DRF app.
+- **Upgrading Django doesn't explain it.** DRF on Django 5.2 (A′) performs the same as on 4.2 (A).
+- **Bolt uses more memory:** about 100 MB more across two processes, for the Rust server and its thread pools. It also used slightly more CPU in B.
+- **v1/v2 calculate responses in C differ from A and B.** The sizing formulas were corrected later (see [Changes](#changes-from-the-drf-version)). The amount of work per request is comparable.
+
+### Setup and caveats
+- **Machine:** a cloud container with 4 vCPU (Intel Xeon @ 2.10 GHz) and 15 GB RAM, running Python 3.12 (A: Python 3.11).
+- **Load generator:** [oha](https://github.com/hatoo/oha) 1.16 ran on the same machine, so it competed with the servers for CPU. Both kinds of server were limited to 2 processes/workers.
+- **Configuration:** `DEBUG=False` and logging reduced to warnings for every build. Payloads were the README examples, plus a 50-item v2 request.
+- **Database:** SQLite over loopback. With a networked Postgres and real network latency, database and network time take a bigger share of each request. Absolute numbers would drop, and the framework-only gap would likely narrow.
+- **This is a synthetic benchmark** on a small API, not production traffic. Treat the ratios as indicative.
+
+### Reproduce it
+The benchmark tool and the raw results of this run are in [`benchmarks/`](benchmarks/README.md):
+```bash
+python3 benchmarks/bench.py setup     # check out the 4 builds, create their environments, seed identical DBs
+python3 benchmarks/bench.py run       # load-test every build (about 18 minutes)
+python3 benchmarks/bench.py queries   # DB queries per request
+python3 benchmarks/bench.py report    # print these tables
+```
+The data behind the tables above is in [`benchmarks/results/2026-09-26/`](benchmarks/results/2026-09-26). Each run uses:
+```bash
+oha --no-tui -z 20s -c 50 -m POST -H "content-type: application/json" \
+    -D benchmarks/payloads/v2.json http://127.0.0.1:8100/api/v2/power_calculator/calculate/
 ```
 
 ## Running Tests

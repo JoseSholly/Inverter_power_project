@@ -1,0 +1,33 @@
+{
+    "backup_time": 4,
+    "battery_capacity": 200,
+    "system_voltage": 24,
+    "solar_panel_watt": 350,
+    "items": [
+        {
+            "id": 8,
+            "quantity": 6,
+            "power_rating": 10
+        },
+        {
+            "id": 18,
+            "quantity": 3,
+            "power_rating": 75
+        },
+        {
+            "id": 17,
+            "quantity": 1,
+            "power_rating": 120
+        },
+        {
+            "id": 15,
+            "quantity": 1,
+            "power_rating": 150
+        },
+        {
+            "id": 12,
+            "quantity": 2,
+            "power_rating": 150
+        }
+    ]
+}

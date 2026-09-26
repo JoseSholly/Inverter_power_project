@@ -1,0 +1,26 @@
+{
+ "A": {
+  "appliances": 1,
+  "v1_calc": 6,
+  "v2_calc": 3,
+  "v2_calc_50": 50
+ },
+ "A2": {
+  "appliances": 1,
+  "v1_calc": 6,
+  "v2_calc": 3,
+  "v2_calc_50": 50
+ },
+ "B": {
+  "appliances": 1,
+  "v1_calc": 1,
+  "v2_calc": 1,
+  "v2_calc_50": 1
+ },
+ "C": {
+  "appliances": 0,
+  "v1_calc": 0,
+  "v2_calc": 0,
+  "v2_calc_50": 0
+ }
+}

@@ -1,0 +1,18 @@
+{
+ "warmup": "5s",
+ "duration": "20s",
+ "runs": 3,
+ "concurrency": 50,
+ "cpu_count": 4,
+ "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+ "memory_gb": 15,
+ "platform": "Linux-6.18.44-fc-v37-x86_64-with-glibc2.39",
+ "oha": "oha 1.16.0",
+ "commits": {
+  "A": "f19d2e4",
+  "A2": "f19d2e4",
+  "B": "978727e",
+  "C": "40bebdf"
+ },
+ "note": "Build C was 40bebdf for this run (the appliance cache commit)."
+}
