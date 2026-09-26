@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """DRF vs django-bolt benchmark for this project.
 
-    python3 benchmarks/bench.py setup     # check out builds, create envs, seed DBs (once)
-    python3 benchmarks/bench.py run       # load-test every build with oha
-    python3 benchmarks/bench.py queries   # DB queries per request, per build
-    python3 benchmarks/bench.py report    # markdown tables from the latest results
+    python benchmarks/bench.py setup     # check out builds, create envs, seed DBs (once)
+    python benchmarks/bench.py run       # load-test every build with oha
+    python benchmarks/bench.py queries   # DB queries per request, per build
+    python benchmarks/bench.py report    # markdown tables from the latest results
 
 Builds (see benchmarks/README.md):
-    A   original DRF code, Django 4.2 (its own pinned requirements), gunicorn
-    A2  same DRF code on Django 5.2, gunicorn
+    A   original DRF code, Django 4.2 (its own pinned requirements), gunicorn (waitress on Windows)
+    A2  same DRF code on Django 5.2, gunicorn (waitress on Windows)
     B   django-bolt migration commit (same responses as A), runbolt
     C   django-bolt at --c-ref (default HEAD), runbolt
 
-Stdlib only. Needs git, uv and oha (on PATH, or $OHA, or downloaded by setup on Linux x86-64).
+Needs git, uv and oha (on PATH, or $OHA, or downloaded by setup on Linux/Windows x86-64).
+On Windows, `psutil` must be importable (pip install psutil) for the resource sampler.
 """
 import argparse
 import ast
@@ -29,6 +30,15 @@ import time
 import urllib.request
 from pathlib import Path
 
+try:
+    import psutil
+except ImportError:
+    psutil = None
+
+IS_WINDOWS = os.name == "nt"
+VENV_BIN = "Scripts" if IS_WINDOWS else "bin"
+EXE = ".exe" if IS_WINDOWS else ""
+
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
 WORK = Path(os.environ.get("BENCH_WORK", HERE / ".work"))
@@ -38,12 +48,20 @@ BASE = f"http://127.0.0.1:{PORT}"
 
 DRF_REF = "f19d2e4"          # original DRF project
 BOLT_MIGRATION_REF = "978727e"  # migration only: byte-identical responses to DRF
+# gunicorn doesn't run on Windows (needs fcntl); waitress is the substitute.
 A2_REQUIREMENTS = [
     "django==5.2.17", "djangorestframework==3.18.1", "drf-yasg==1.21.15", "django-rest-swagger==2.2.0",
-    "coreapi==2.3.3", "setuptools==69.5.1", "gunicorn==26.2.0", "django-jazzmin==3.0.5",
+    "coreapi==2.3.3", "setuptools==69.5.1", "django-jazzmin==3.0.5",
     "django-cors-headers==4.9.0", "whitenoise==6.12.0", "python-decouple==3.8", "python-dotenv==1.2.3",
-]
-OHA_URL = "https://github.com/hatoo/oha/releases/latest/download/oha-linux-amd64"
+] + (["waitress"] if IS_WINDOWS else ["gunicorn==26.2.0"])
+
+OHA_URLS = {
+    ("Linux", "x86_64"):  "https://github.com/hatoo/oha/releases/latest/download/oha-linux-amd64",
+    ("Linux", "AMD64"):   "https://github.com/hatoo/oha/releases/latest/download/oha-linux-amd64",
+    ("Windows", "AMD64"): "https://github.com/hatoo/oha/releases/latest/download/oha-windows-amd64.exe",
+    ("Windows", "x86_64"): "https://github.com/hatoo/oha/releases/latest/download/oha-windows-amd64.exe",
+}
+OHA_LOCAL = "oha.exe" if IS_WINDOWS else "oha"
 
 ENDPOINTS = [  # name, method, path, payload
     ("appliances", "GET", "/api/v1/power_calculator/appliances/", None),
@@ -63,11 +81,22 @@ ENV_COMMON = {
 }
 
 
+def venv_python(env_dir):
+    return env_dir / VENV_BIN / f"python{EXE}"
+
+
+def venv_exe(env_dir, name):
+    return env_dir / VENV_BIN / f"{name}{EXE}"
+
+
 # ---------------------------------------------------------------- builds
 def builds():
     """name -> (project dir, python, server command)."""
-    def gunicorn(env):
-        return [str(env / "bin" / "gunicorn"), "inverter_project.wsgi", "-w", "2",
+    def wsgi_server(env):
+        if IS_WINDOWS:
+            return [str(venv_exe(env, "waitress-serve")), "--host=127.0.0.1", f"--port={PORT}",
+                    "--threads=8", "inverter_project.wsgi:application"]
+        return [str(venv_exe(env, "gunicorn")), "inverter_project.wsgi", "-w", "2",
                 "-b", f"127.0.0.1:{PORT}", "--log-level", "warning"]
 
     def runbolt(py):
@@ -77,10 +106,10 @@ def builds():
     b_dir = WORK / "B" / "inverter_project"
     c_dir = WORK / "C" / "inverter_project"
     return {
-        "A": (a_dir, WORK / "envA" / "bin" / "python", gunicorn(WORK / "envA")),
-        "A2": (a_dir, WORK / "envA2" / "bin" / "python", gunicorn(WORK / "envA2")),
-        "B": (b_dir, b_dir / ".venv" / "bin" / "python", runbolt(b_dir / ".venv" / "bin" / "python")),
-        "C": (c_dir, c_dir / ".venv" / "bin" / "python", runbolt(c_dir / ".venv" / "bin" / "python")),
+        "A":  (a_dir, venv_python(WORK / "envA"),  wsgi_server(WORK / "envA")),
+        "A2": (a_dir, venv_python(WORK / "envA2"), wsgi_server(WORK / "envA2")),
+        "B":  (b_dir, venv_python(b_dir / ".venv"), runbolt(venv_python(b_dir / ".venv"))),
+        "C":  (c_dir, venv_python(c_dir / ".venv"), runbolt(venv_python(c_dir / ".venv"))),
     }
 
 
@@ -96,7 +125,7 @@ def sh(*cmd, **kwargs):
 
 
 def oha_path():
-    for candidate in (os.environ.get("OHA"), shutil.which("oha"), WORK / "oha"):
+    for candidate in (os.environ.get("OHA"), shutil.which("oha"), WORK / OHA_LOCAL):
         if candidate and Path(candidate).exists():
             return str(candidate)
     sys.exit("oha not found: install it (https://github.com/hatoo/oha), set $OHA, or run `bench.py setup`.")
@@ -122,12 +151,26 @@ print(os.environ["BENCH_DB"], Appliance.objects.count(), "appliances")
 """
 
 
+def _worktree_remove(target):
+    """Remove a git worktree; if git no longer knows about it, wipe the directory manually."""
+    result = subprocess.run(["git", "-C", str(REPO), "worktree", "remove", "--force", str(target)],
+                            capture_output=True, text=True)
+    if result.returncode == 0:
+        return
+    # Stale directory left over from a previous partial run — git worktree list forgot it.
+    shutil.rmtree(target, ignore_errors=True)
+    subprocess.run(["git", "-C", str(REPO), "worktree", "prune"], check=False)
+
+
 def cmd_setup(args):
+    if IS_WINDOWS and psutil is None:
+        print("Warning: psutil not importable — resource sampling (peak RSS / avg CPU) will be skipped on Windows.\n"
+              "         Install with:  pip install psutil", flush=True)
     WORK.mkdir(parents=True, exist_ok=True)
     for name, ref in (("A", DRF_REF), ("B", BOLT_MIGRATION_REF), ("C", args.c_ref)):
         target = WORK / name
         if target.exists():
-            sh("git", "-C", REPO, "worktree", "remove", "--force", target)
+            _worktree_remove(target)
         sh("git", "-C", REPO, "worktree", "add", "--detach", target, ref)
 
     # A: the original pinned requirements (Python 3.11; drf-yasg there still needs pkg_resources).
@@ -135,10 +178,12 @@ def cmd_setup(args):
     reqs.write_bytes(subprocess.run(["git", "-C", str(REPO), "show", f"{DRF_REF}:inverter_project/requirements.txt"],
                                     check=True, capture_output=True).stdout)
     sh("uv", "venv", "-q", "--clear", "-p", "3.11", WORK / "envA")
-    sh("uv", "pip", "install", "-q", "--python", WORK / "envA" / "bin" / "python", "-r", reqs, "setuptools<70")
+    extra_a = ["waitress"] if IS_WINDOWS else []
+    sh("uv", "pip", "install", "-q", "--python", venv_python(WORK / "envA"),
+       "-r", reqs, "setuptools<70", *extra_a)
     # A2: same DRF code on Django 5.2.
     sh("uv", "venv", "-q", "--clear", "-p", "3.12", WORK / "envA2")
-    sh("uv", "pip", "install", "-q", "--python", WORK / "envA2" / "bin" / "python", *A2_REQUIREMENTS)
+    sh("uv", "pip", "install", "-q", "--python", venv_python(WORK / "envA2"), *A2_REQUIREMENTS)
     # B, C: their own locked environments.
     for name in ("B", "C"):
         sh("uv", "sync", "-q", "--frozen", cwd=WORK / name / "inverter_project")
@@ -151,17 +196,27 @@ def cmd_setup(args):
         sh(python, "manage.py", "migrate", "-v", "0", cwd=project_dir, env=env)
         sh(python, "-c", SEED, cwd=project_dir, env={**env, "NAMES": names})
 
-    if not (os.environ.get("OHA") or shutil.which("oha") or (WORK / "oha").exists()):
-        if platform.system() == "Linux" and platform.machine() in ("x86_64", "AMD64"):
-            urllib.request.urlretrieve(OHA_URL, WORK / "oha")
-            (WORK / "oha").chmod(0o755)
+    if not (os.environ.get("OHA") or shutil.which("oha") or (WORK / OHA_LOCAL).exists()):
+        key = (platform.system(), platform.machine())
+        if key in OHA_URLS:
+            dest = WORK / OHA_LOCAL
+            urllib.request.urlretrieve(OHA_URLS[key], dest)
+            if not IS_WINDOWS:
+                dest.chmod(0o755)
         else:
-            print("Install oha yourself: https://github.com/hatoo/oha")
-    print("\nSetup done. Next: python3 benchmarks/bench.py run")
+            print(f"Install oha yourself for {key}: https://github.com/hatoo/oha")
+    print("\nSetup done. Next: python benchmarks/bench.py run")
 
 
 # ---------------------------------------------------------------- run
 def _tree_pids(root):
+    if psutil is not None:
+        try:
+            proc = psutil.Process(root)
+            return [root] + [c.pid for c in proc.children(recursive=True)]
+        except psutil.NoSuchProcess:
+            return [root]
+    # POSIX fallback via ps
     rows = subprocess.run(["ps", "-eo", "pid=,ppid="], capture_output=True, text=True).stdout.split("\n")
     children = {}
     for row in rows:
@@ -177,6 +232,30 @@ def _tree_pids(root):
 
 
 def _sample_resources(root, stop, samples):
+    if psutil is not None:
+        procs = {}
+        while not stop.is_set():
+            for pid in _tree_pids(root):
+                if pid not in procs:
+                    try:
+                        procs[pid] = psutil.Process(pid)
+                        procs[pid].cpu_percent(interval=None)  # prime the counter
+                    except psutil.NoSuchProcess:
+                        pass
+            rss_kb = 0
+            cpu = 0.0
+            for pid, p in list(procs.items()):
+                try:
+                    rss_kb += p.memory_info().rss // 1024
+                    cpu += p.cpu_percent(interval=None)
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    procs.pop(pid, None)
+            samples.append((rss_kb, cpu))
+            time.sleep(1)
+        return
+    if IS_WINDOWS:
+        samples.append((0, 0.0))  # no psutil on Windows: skip sampling
+        return
     while not stop.is_set():
         pids = ",".join(map(str, _tree_pids(root)))
         rows = subprocess.run(["ps", "-o", "rss=,pcpu=", "-p", pids], capture_output=True, text=True).stdout.split("\n")
@@ -203,11 +282,32 @@ def _wait_until_up():
     raise RuntimeError("server did not start")
 
 
+def _spawn_server(cmd, cwd, env, stderr):
+    if IS_WINDOWS:
+        return subprocess.Popen(cmd, cwd=cwd, env=env, stdout=subprocess.DEVNULL, stderr=stderr,
+                                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+    return subprocess.Popen(cmd, cwd=cwd, env=env, stdout=subprocess.DEVNULL, stderr=stderr,
+                            start_new_session=True)
+
+
+def _terminate_server(server):
+    if IS_WINDOWS:
+        subprocess.run(["taskkill", "/F", "/T", "/PID", str(server.pid)], capture_output=True)
+    else:
+        try:
+            os.killpg(server.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+    try:
+        server.wait(timeout=30)
+    except subprocess.TimeoutExpired:
+        server.kill()
+
+
 def run_build(name, args, out_dir):
     project_dir, _, server_cmd = builds()[name]
     log = open(out_dir / f"{name}.server.log", "w")
-    server = subprocess.Popen(server_cmd, cwd=project_dir, env=build_env(name, project_dir),
-                              stdout=subprocess.DEVNULL, stderr=log, start_new_session=True)
+    server = _spawn_server(server_cmd, cwd=project_dir, env=build_env(name, project_dir), stderr=log)
     results = {}
     try:
         _wait_until_up()
@@ -236,14 +336,14 @@ def run_build(name, args, out_dir):
                              "err": 100 * (1 - ok / total), "n": total})
             median = {key: statistics.median(run[key] for run in runs) for key in runs[0]}
             median["rps_runs"] = [round(run["rps"]) for run in runs]
-            median["peak_rss_mb"] = max(s[0] for s in samples) / 1024
-            median["avg_cpu_pct"] = statistics.mean(s[1] for s in samples)
+            median["peak_rss_mb"] = (max(s[0] for s in samples) / 1024) if samples else 0
+            median["avg_cpu_pct"] = statistics.mean(s[1] for s in samples) if samples else 0
             results[endpoint] = median
             print(f"{name:3} {endpoint:11} {median['rps']:8.0f} req/s  p50 {median['p50']:6.1f} ms  "
                   f"p99 {median['p99']:6.1f} ms  errors {median['err']:.2f}%  runs {median['rps_runs']}", flush=True)
     finally:
-        os.killpg(server.pid, signal.SIGTERM)
-        server.wait(timeout=30)
+        _terminate_server(server)
+        log.close()
     (out_dir / f"results_{name}.json").write_text(json.dumps(results, indent=1))
 
 
@@ -256,7 +356,7 @@ def cmd_run(args):
     (out_dir / "meta.json").write_text(json.dumps(meta, indent=1))
     for name in args.builds:
         run_build(name, args, out_dir)
-    print(f"\nResults in {out_dir}. Next: python3 benchmarks/bench.py report --label {args.label}")
+    print(f"\nResults in {out_dir}. Next: python benchmarks/bench.py report --label {args.label}")
 
 
 # ---------------------------------------------------------------- queries

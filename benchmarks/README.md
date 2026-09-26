@@ -5,8 +5,8 @@ Reproducible DRF vs django-bolt load test for this project. The results and how 
 ## What it compares
 | Build | Code | Server |
 |---|---|---|
-| **A** | original DRF project (`f19d2e4`), Django 4.2, its own pinned requirements | gunicorn, 2 sync workers |
-| **A2** | same DRF code on Django 5.2 (rules out the Django upgrade) | gunicorn, 2 sync workers |
+| **A** | original DRF project (`f19d2e4`), Django 4.2, its own pinned requirements | gunicorn, 2 sync workers (waitress with 8 threads on Windows) |
+| **A2** | same DRF code on Django 5.2 (rules out the Django upgrade) | gunicorn, 2 sync workers (waitress with 8 threads on Windows) |
 | **B** | django-bolt migration commit (`978727e`), byte-identical responses to A | `runbolt --processes 2` |
 | **C** | django-bolt at `HEAD` (or `--c-ref`), with the appliance cache | `runbolt --processes 2` |
 
@@ -27,17 +27,18 @@ The endpoints and payloads (in [`payloads/`](payloads)):
 | `v2_calc_50` | `POST /api/v2/.../calculate/` with 50 items (shows the old one-query-per-item cost) |
 
 ## Requirements
-- Linux or macOS, with `git`, [`uv`](https://docs.astral.sh/uv/) and Python 3 on the path. `uv` installs Python 3.11 and 3.12 itself if needed.
-- [`oha`](https://github.com/hatoo/oha) on `PATH`, or set `$OHA`. On Linux x86-64, `setup` downloads it if it's missing.
+- Linux, macOS or Windows, with `git`, [`uv`](https://docs.astral.sh/uv/) and Python 3 on the path. `uv` installs Python 3.11 and 3.12 itself if needed.
+- [`oha`](https://github.com/hatoo/oha) on `PATH`, or set `$OHA`. On Linux and Windows x86-64, `setup` downloads it if it's missing.
+- On Windows, install `psutil` (`pip install psutil`) so the resource sampler can walk the server process tree; without it the peak RSS / avg CPU columns are skipped.
 - About 1 GB of disk for the worktrees and environments (in `benchmarks/.work/`, which git ignores).
 
 ## Running it
-From the repository root:
+From the repository root (use `python` on Windows, `python3` on Linux/macOS):
 ```bash
-python3 benchmarks/bench.py setup                 # once: worktrees, environments, databases
-python3 benchmarks/bench.py run                   # ~18 min: 4 builds x 4 endpoints x (5 s warm-up + 3 x 20 s)
-python3 benchmarks/bench.py queries               # DB queries per request, per build
-python3 benchmarks/bench.py report                # markdown tables for the README
+python benchmarks/bench.py setup                  # once: worktrees, environments, databases
+python benchmarks/bench.py run                    # ~18 min: 4 builds x 4 endpoints x (5 s warm-up + 3 x 20 s)
+python benchmarks/bench.py queries                # DB queries per request, per build
+python benchmarks/bench.py report                 # markdown tables for the README
 ```
 
 Results go to `benchmarks/results/<label>/`. The default label is today's date; choose your own with `--label`.
@@ -51,10 +52,10 @@ Results go to `benchmarks/results/<label>/`. The default label is today's date; 
 
 Useful options:
 ```bash
-python3 benchmarks/bench.py run --builds A B          # only some builds
-python3 benchmarks/bench.py run --duration 60s --runs 5 --concurrency 100
-python3 benchmarks/bench.py setup --c-ref my-branch   # benchmark another commit as C
-BENCH_WORK=/tmp/bench python3 benchmarks/bench.py setup   # keep working files elsewhere
+python benchmarks/bench.py run --builds A B           # only some builds
+python benchmarks/bench.py run --duration 60s --runs 5 --concurrency 100
+python benchmarks/bench.py setup --c-ref my-branch    # benchmark another commit as C
+BENCH_WORK=/tmp/bench python benchmarks/bench.py setup    # keep working files elsewhere (set BENCH_WORK=C:\bench on Windows)
 ```
 
 To remove the working files:
