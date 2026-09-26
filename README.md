@@ -36,6 +36,8 @@ Apart from how energy demand is worked out, both versions use the **same sizing 
 
 ## Project Structure
 ```
+benchmarks/                       # DRF vs Bolt load-test tool, payloads and stored results
+examples/                         # sample request scripts
 inverter_project/
 ├── manage.py
 ├── pyproject.toml / uv.lock      # dependencies (managed by uv)
@@ -628,10 +630,18 @@ Resources:
 - **Database:** SQLite over loopback. With a networked Postgres and real network latency, database and network time take a bigger share of each request. Absolute numbers would drop, and the framework-only gap would likely narrow.
 - **This is a synthetic benchmark** on a small API, not production traffic. Treat the ratios as indicative.
 
-Command used for each run:
+### Reproduce it
+The benchmark tool and the raw results of this run are in [`benchmarks/`](benchmarks/README.md):
+```bash
+python3 benchmarks/bench.py setup     # check out the 4 builds, create their environments, seed identical DBs
+python3 benchmarks/bench.py run       # load-test every build (about 18 minutes)
+python3 benchmarks/bench.py queries   # DB queries per request
+python3 benchmarks/bench.py report    # print these tables
+```
+The data behind the tables above is in [`benchmarks/results/2026-09-26/`](benchmarks/results/2026-09-26). Each run uses:
 ```bash
 oha --no-tui -z 20s -c 50 -m POST -H "content-type: application/json" \
-    -D v2.json http://127.0.0.1:8100/api/v2/power_calculator/calculate/
+    -D benchmarks/payloads/v2.json http://127.0.0.1:8100/api/v2/power_calculator/calculate/
 ```
 
 ## Running Tests
