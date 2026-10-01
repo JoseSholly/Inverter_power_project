@@ -9,8 +9,17 @@ DEBUG = False
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", *env_list("ALLOWED_HOSTS")]
 
 DATABASES = {
-    "default": dj_database_url.parse(config("DATABASE_URL"), conn_max_age=600),
+    "default": dj_database_url.parse(
+        config("DATABASE_URL"), conn_max_age=600, conn_health_checks=True
+    ),
 }
+
+# django-bolt only fires request_started / request_finished when this is set,
+# and those signals are what trigger Django's close_old_connections — the
+# recycle step that honours CONN_MAX_AGE and CONN_HEALTH_CHECKS. Without it
+# persistent connections never get pruned and a server-side close surfaces as
+# "InterfaceError: connection already closed" on the next query.
+BOLT_EMIT_SIGNALS = True
 
 REDIS_URL = config("REDIS_URL", default="")
 if REDIS_URL:
