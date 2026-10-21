@@ -68,6 +68,8 @@ async def v2_calculate(data: V2CalculationIn) -> V2CalculationOut:
         numbers_of_solar_panel=output.numbers_of_solar_panel,
         total_current=output.total_current,
         controller_current=output.controller_current,
+        recommended_system_voltage=result.recommended_system_voltage,
+        warnings=list(result.warnings),
         items=[
             V2ApplianceItemOut(i.id, i.name, i.quantity, i.power_rating, i.backup_time)
             for i in result.items

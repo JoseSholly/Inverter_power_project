@@ -19,6 +19,14 @@ BATTERY_DEPTH_OF_DISCHARGE = 0.5
 BATTERY_UNIT_VOLTAGE = 12
 """Batteries are 12V units wired in series strings to reach the system voltage."""
 
+VOLTAGE_TIERS_KVA = ((1.0, 12), (3.0, 24))
+"""(max inverter kVA, recommended system voltage); anything larger gets 48V."""
+
+LARGEST_RECOMMENDED_VOLTAGE = 48
+
+MAX_PARALLEL_STRINGS = 3
+"""More parallel battery strings than this gets unevenly charged and hard to wire."""
+
 PEAK_SUN_HOURS = 6
 """Average daily peak sun hours."""
 
@@ -36,6 +44,32 @@ def safe_ceil(value: float) -> int:
 
 def inverter_rating_kva(total_load_w: float) -> float:
     return round(total_load_w / POWER_FACTOR / 1000, 2)
+
+
+def recommended_system_voltage(inverter_kva: float) -> int:
+    """12V up to 1 kVA, 24V up to 3 kVA, 48V above: keeps battery current sane."""
+    for max_kva, voltage in VOLTAGE_TIERS_KVA:
+        if inverter_kva <= max_kva:
+            return voltage
+    return LARGEST_RECOMMENDED_VOLTAGE
+
+
+def voltage_warnings(
+    system_voltage: float, recommended_voltage: int, parallel_strings: int
+) -> list[str]:
+    """Advice when the chosen voltage is low for the load. Never changes results."""
+    if system_voltage >= recommended_voltage:
+        return []
+    message = (
+        f"A {system_voltage:g}V system is low for this load; "
+        f"{recommended_voltage}V is recommended."
+    )
+    if parallel_strings > MAX_PARALLEL_STRINGS:
+        message += (
+            f" The bank needs {parallel_strings} parallel battery strings "
+            f"(more than {MAX_PARALLEL_STRINGS}); a higher voltage reduces this."
+        )
+    return [message]
 
 
 def battery_capacity_ah(energy_wh: float, system_voltage: float) -> float:

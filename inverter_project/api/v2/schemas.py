@@ -129,4 +129,15 @@ class V2CalculationOut(msgspec.Struct):
     numbers_of_solar_panel: Annotated[int, Meta(examples=[3])]
     total_current: Annotated[float, Meta(examples=[42.5])]
     controller_current: Annotated[float, Meta(examples=[53.13])]
+    recommended_system_voltage: Annotated[
+        int,
+        Meta(
+            description="12V up to 1 kVA, 24V up to 3 kVA, 48V above. Advice only; results use system_voltage.",
+            examples=[24],
+        ),
+    ]
+    warnings: Annotated[
+        list[str],
+        Meta(description="Sizing advice, e.g. when system_voltage is low for the load."),
+    ]
     items: Annotated[list[V2ApplianceItemOut], Meta(examples=[_EXAMPLE_ITEMS_OUT])]

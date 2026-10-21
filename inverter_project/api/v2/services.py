@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from api.common import sizing
 from api.common.appliances import get_appliance_names
 
 from .calculator import LoadItem, V2CalculationInput, V2CalculationOutput, V2Calculator
@@ -37,6 +38,8 @@ class V2CalculationResult:
     request: V2CalculationRequest
     output: V2CalculationOutput
     items: tuple[V2ResolvedItem, ...]
+    recommended_system_voltage: int
+    warnings: tuple[str, ...]
 
 
 class V2CalculationService:
@@ -66,4 +69,16 @@ class V2CalculationService:
             )
             for item in request.items
         )
-        return V2CalculationResult(request=request, output=output, items=items)
+        recommended = sizing.recommended_system_voltage(output.inverter_rating)
+        strings = sizing.safe_ceil(
+            output.total_battery_capacity / request.battery_capacity
+        )
+        return V2CalculationResult(
+            request=request,
+            output=output,
+            items=items,
+            recommended_system_voltage=recommended,
+            warnings=tuple(
+                sizing.voltage_warnings(request.system_voltage, recommended, strings)
+            ),
+        )

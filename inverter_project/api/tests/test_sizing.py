@@ -29,6 +29,28 @@ class SizingModelTests(SimpleTestCase):
         self.assertEqual(sizing.array_current_a(3, 350, 24), 43.75)
         self.assertEqual(sizing.controller_current_a(3, 350, 24), 54.69)
 
+    def test_recommended_voltage_tiers_and_boundaries(self):
+        cases = (
+            (0.31, 12),
+            (1.0, 12),
+            (1.01, 24),
+            (3.0, 24),
+            (3.01, 48),
+            (10.0, 48),
+        )
+        for kva, voltage in cases:
+            with self.subTest(kva=kva):
+                self.assertEqual(sizing.recommended_system_voltage(kva), voltage)
+
+    def test_voltage_warnings(self):
+        self.assertEqual(sizing.voltage_warnings(24, 24, 2), [])
+        self.assertEqual(sizing.voltage_warnings(48, 24, 9), [])
+        (low,) = sizing.voltage_warnings(12, 24, 2)
+        self.assertIn("24V is recommended", low)
+        self.assertNotIn("parallel", low)
+        (many,) = sizing.voltage_warnings(12, 48, 5)
+        self.assertIn("5 parallel battery strings", many)
+
     def test_zero_guards(self):
         self.assertEqual(sizing.battery_capacity_ah(100, 0), 0)
         self.assertEqual(sizing.number_of_batteries(100, 0, 24), 0)

@@ -96,6 +96,20 @@ class EndpointTests(TestCase):
         self.assertEqual(body["total_battery_capacity"], 50.0)
         self.assertIn("total_current", body)
         self.assertEqual(body["items"][0]["name"], "Fridge")
+        self.assertEqual(body["recommended_system_voltage"], 12)
+        self.assertEqual(body["warnings"], [])
+
+    def test_v2_warns_when_voltage_is_low_for_the_load(self):
+        item = self.v2_payload()["items"][0] | {"power_rating": 4000, "quantity": 1}
+        low = self.client.post(
+            V2_URL, json=self.v2_payload(system_voltage=12, items=[item])
+        ).json()
+        ok = self.client.post(
+            V2_URL, json=self.v2_payload(system_voltage=48, items=[item])
+        ).json()
+        self.assertEqual(low["recommended_system_voltage"], 48)
+        self.assertEqual(len(low["warnings"]), 1)
+        self.assertEqual(ok["warnings"], [])
 
     def test_unknown_appliance_is_422_pointing_at_the_item(self):
         known = self.appliances[0].id
