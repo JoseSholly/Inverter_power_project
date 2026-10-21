@@ -14,7 +14,7 @@ from api.common.appliance_endpoint import (
 from api.common.errors import unknown_appliance_to_validation_error
 from api.common.exceptions import UnknownApplianceError
 from api.common.routing import Routes
-from api.common.schemas import ApplianceOut
+from api.common.schemas import ApplianceOut, WarningOut
 
 from .schemas import V2ApplianceItemOut, V2CalculationIn, V2CalculationOut
 from .services import V2CalculationRequest, V2CalculationService, V2ItemRequest
@@ -69,7 +69,10 @@ async def v2_calculate(data: V2CalculationIn) -> V2CalculationOut:
         total_current=output.total_current,
         controller_current=output.controller_current,
         recommended_system_voltage=result.recommended_system_voltage,
-        warnings=list(result.warnings),
+        warnings=[
+            WarningOut(w.code, w.message, w.recommended_system_voltage)
+            for w in result.warnings
+        ],
         items=[
             V2ApplianceItemOut(i.id, i.name, i.quantity, i.power_rating, i.backup_time)
             for i in result.items

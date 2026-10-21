@@ -111,6 +111,9 @@ CSRF_TRUSTED_ORIGINS=http://localhost:3000
 | `DATABASE_URL` | prod only | PostgreSQL connection URL |
 | `REDIS_URL` | recommended in prod | Redis for the shared cache, e.g. `redis://host:6379/0`. Without it each server process caches separately (see [Caching](#caching)) |
 | `APPLIANCE_CACHE_TIMEOUT` | no | Seconds a cached appliance list lives (default `3600`); changes invalidate it sooner |
+| `VOLTAGE_12V_MAX_KVA` | no | Largest inverter (kVA) that still suits a 12 V system (default `1.0`) |
+| `VOLTAGE_24V_MAX_KVA` | no | Largest inverter (kVA) that still suits a 24 V system (default `3.0`); above it 48 V is recommended |
+| `MAX_PARALLEL_STRINGS` | no | Parallel battery strings allowed before a warning (default `3`) |
 
 ### 4. Create the database and load appliances
 ```bash
@@ -381,8 +384,8 @@ Both versions share one sizing model (`api/common/sizing.py`). The **only** diff
 | Peak sun hours (PSH) | 6 h | average daily full-sun hours |
 | Solar system efficiency (η<sub>sol</sub>) | 0.8 | panel derating, controller and charging losses |
 | Controller safety factor | 1.25 | headroom over the array current |
-| Voltage tiers | ≤ 1 kVA → 12 V, ≤ 3 kVA → 24 V, else 48 V | recommended `system_voltage` for the inverter size |
-| Max parallel strings | 3 | more than this adds a voltage warning |
+| Voltage tiers | ≤ 1 kVA → 12 V, ≤ 3 kVA → 24 V, else 48 V | recommended `system_voltage` for the inverter size (tunable, see environment variables) |
+| Max parallel strings | 3 | more than this adds a `MANY_PARALLEL_STRINGS` warning (tunable) |
 
 Symbols: **V** = `system_voltage`, **C** = `battery_capacity` (Ah of one battery), **W** = `solar_panel_watt`.
 All results are rounded to 2 decimals. Counts are rounded **up**, ignoring float noise such as 3.0000000000000004.
@@ -419,7 +422,19 @@ Why these formulas:
 - **Battery count**: a 24 V bank needs 2 × 12 V batteries in series per string, a 48 V bank needs 4. You add parallel strings until the Ah is covered.
 - **Solar** must put back E every day in 6 sun-hours, after 20% losses.
 - **Currents** are based on the panels actually installed (N × W), because that is what the controller has to handle.
-- **Recommended voltage (v1 and v2)**: for the same watts, current = P ÷ V, so a 12 V bank carries twice the current of a 24 V one. That means thicker cables, hotter connections and more parallel battery strings. The API recommends **12 V up to 1 kVA, 24 V up to 3 kVA and 48 V above** (based on `inverter_rating`), and adds a `warnings` entry when your `system_voltage` is lower. It also mentions it if the bank needs more than 3 parallel strings. The calculation itself is never changed.
+- **Recommended voltage (v1 and v2)**: for the same watts, current = P ÷ V, so a 12 V bank carries twice the current of a 24 V one. That means thicker cables, hotter connections and more parallel battery strings. The API recommends **12 V up to 1 kVA, 24 V up to 3 kVA and 48 V above**, and returns `warnings` (see below). The calculation itself is never changed. The recommendation is based on `inverter_rating`, i.e. **all listed appliances running at the same time**, the same assumption as the inverter size. The API has no schedule input, so it can't know that some appliances never overlap; if yours don't, a lower voltage than recommended may be fine.
+
+### Warnings
+`warnings` is a list of objects (empty when there is nothing to say). Each has a stable `code` to branch on, a display `message` (English) and an optional suggested voltage:
+```json
+{"code": "LOW_VOLTAGE", "message": "A 12V system is low for this load; 24V is recommended.", "recommended_system_voltage": 24}
+```
+| `code` | When | `recommended_system_voltage` |
+|---|---|---|
+| `LOW_VOLTAGE` | `system_voltage` is below the recommended voltage | the recommended voltage |
+| `MANY_PARALLEL_STRINGS` | the bank needs more parallel strings than `MAX_PARALLEL_STRINGS` | the next standard voltage up (12 → 24 → 48), or `null` at 48 V or above (use larger batteries) |
+
+The two checks are independent: a small load that must run for a long time can trigger `MANY_PARALLEL_STRINGS` even when the voltage is already high enough, and both can appear together.
 
 ## Worked Scenarios
 The same home is sized with both versions. Appliance IDs match a fresh database loaded with `populate_appliances`.
@@ -733,7 +748,7 @@ docker push <user>/inverter-power:latest
 - v1 `inverter_rating` is rounded to 2 decimals, like v2.
 - **One sizing model for both versions.** Battery capacity now allows for inverter losses (0.8) and a 50% depth of discharge, so the bank is no longer undersized. Before, v2 had neither and v1 had only the inverter factor. Solar is rounded once, at the end. Both versions return `total_current` (installed array) and `controller_current` (array × 1.25). Before, v2 sized the controller from the required capacity instead of the installed panels.
 - v2 `system_voltage` must be a multiple of 12 V, because batteries are 12 V units.
-- **New (v1 and v2)**: the response includes `recommended_system_voltage` (12 V up to 1 kVA, 24 V up to 3 kVA, 48 V above) and a `warnings` list. A warning appears when the chosen voltage is below the recommendation. It is advice only: the numbers always use the `system_voltage` you sent.
+- **New (v1 and v2)**: the response includes `recommended_system_voltage` (12 V up to 1 kVA, 24 V up to 3 kVA, 48 V above) and a `warnings` list of `{code, message, recommended_system_voltage}` objects (`LOW_VOLTAGE`, `MANY_PARALLEL_STRINGS`). It is advice only: the numbers always use the `system_voltage` you sent. Thresholds are set with `VOLTAGE_12V_MAX_KVA`, `VOLTAGE_24V_MAX_KVA` and `MAX_PARALLEL_STRINGS`.
 - `items` must contain 1–100 appliances, and every numeric input has a realistic upper limit. Absurd values used to crash the server (500) or return nonsense.
 - The wrong HTTP method still returns **405** with an `Allow` header, as with DRF. Paths now also work **without the trailing slash**: DRF redirected them (301), and a POST was then lost.
 - New: `?name=` filter on the appliance endpoints, a Redis-backed appliance cache with automatic invalidation, and ETag/304 support.

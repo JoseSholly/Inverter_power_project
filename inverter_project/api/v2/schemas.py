@@ -15,6 +15,7 @@ from api.common.limits import (
     MAX_SOLAR_PANEL_W,
     MAX_SYSTEM_VOLTAGE_V,
 )
+from api.common.schemas import WarningOut
 
 _EXAMPLE_ITEMS_IN = [
     {"id": 1, "quantity": 2, "power_rating": 60.0, "backup_time": 8.0},
@@ -137,9 +138,7 @@ class V2CalculationOut(msgspec.Struct):
         ),
     ]
     warnings: Annotated[
-        list[str],
-        Meta(
-            description="Sizing advice, e.g. when system_voltage is low for the load."
-        ),
+        list[WarningOut],
+        Meta(description="Sizing advice (empty when none). Each has a stable `code`."),
     ]
     items: Annotated[list[V2ApplianceItemOut], Meta(examples=[_EXAMPLE_ITEMS_OUT])]

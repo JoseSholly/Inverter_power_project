@@ -97,6 +97,13 @@ CACHES = {
     }
 }
 APPLIANCE_CACHE_TIMEOUT = config("APPLIANCE_CACHE_TIMEOUT", default=3600, cast=int)
+
+# System-voltage advice: largest inverter (kVA) that still suits 12V / 24V; above
+# the 24V limit 48V is recommended. More parallel battery strings than
+# MAX_PARALLEL_STRINGS triggers a warning.
+VOLTAGE_12V_MAX_KVA = config("VOLTAGE_12V_MAX_KVA", default=1.0, cast=float)
+VOLTAGE_24V_MAX_KVA = config("VOLTAGE_24V_MAX_KVA", default=3.0, cast=float)
+MAX_PARALLEL_STRINGS = config("MAX_PARALLEL_STRINGS", default=3, cast=int)
 """Seconds a cached appliance catalogue lives; a safety net, since changes invalidate it."""
 
 # Isolates tests from each other's cache entries (see inverter_project/test_runner.py).

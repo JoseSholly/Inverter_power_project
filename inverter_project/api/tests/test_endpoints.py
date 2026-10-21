@@ -85,15 +85,20 @@ class EndpointTests(TestCase):
         item = {"id": self.appliances[0].id, "quantity": 1, "power_rating": 4000}
         fine = self.client.post(V1_URL, json=self.v1_payload()).json()
         low = self.client.post(
-            V1_URL, json=self.v1_payload(system_voltage=12, items=[item])
+            V1_URL, json=self.v1_payload(system_voltage=12, backup_time=1, items=[item])
         ).json()
         ok = self.client.post(
-            V1_URL, json=self.v1_payload(system_voltage=48, items=[item])
+            V1_URL, json=self.v1_payload(system_voltage=48, backup_time=1, items=[item])
         ).json()
         self.assertEqual(fine["recommended_system_voltage"], 12)
         self.assertEqual(fine["warnings"], [])
         self.assertEqual(low["recommended_system_voltage"], 48)
-        self.assertEqual(len(low["warnings"]), 1)
+        self.assertEqual(
+            [w["code"] for w in low["warnings"]],
+            ["LOW_VOLTAGE", "MANY_PARALLEL_STRINGS"],
+        )
+        self.assertEqual(low["warnings"][0]["recommended_system_voltage"], 48)
+        self.assertIn("message", low["warnings"][0])
         self.assertEqual(ok["warnings"], [])
 
     def test_v1_defaults_quantity_and_power_rating(self):
@@ -115,7 +120,11 @@ class EndpointTests(TestCase):
         self.assertEqual(body["warnings"], [])
 
     def test_v2_warns_when_voltage_is_low_for_the_load(self):
-        item = self.v2_payload()["items"][0] | {"power_rating": 4000, "quantity": 1}
+        item = self.v2_payload()["items"][0] | {
+            "power_rating": 4000,
+            "quantity": 1,
+            "backup_time": 1.0,
+        }
         low = self.client.post(
             V2_URL, json=self.v2_payload(system_voltage=12, items=[item])
         ).json()
@@ -123,8 +132,22 @@ class EndpointTests(TestCase):
             V2_URL, json=self.v2_payload(system_voltage=48, items=[item])
         ).json()
         self.assertEqual(low["recommended_system_voltage"], 48)
-        self.assertEqual(len(low["warnings"]), 1)
+        self.assertEqual(
+            [w["code"] for w in low["warnings"]],
+            ["LOW_VOLTAGE", "MANY_PARALLEL_STRINGS"],
+        )
+        self.assertEqual(low["warnings"][0]["recommended_system_voltage"], 48)
+        self.assertIn("message", low["warnings"][0])
         self.assertEqual(ok["warnings"], [])
+
+    def test_v2_warns_about_many_strings_even_when_voltage_is_enough(self):
+        item = self.v2_payload()["items"][0] | {"power_rating": 300, "backup_time": 24}
+        body = self.client.post(V2_URL, json=self.v2_payload(items=[item])).json()
+        self.assertEqual(body["recommended_system_voltage"], 12)
+        self.assertEqual(
+            [w["code"] for w in body["warnings"]], ["MANY_PARALLEL_STRINGS"]
+        )
+        self.assertEqual(body["warnings"][0]["recommended_system_voltage"], 48)
 
     def test_unknown_appliance_is_422_pointing_at_the_item(self):
         known = self.appliances[0].id

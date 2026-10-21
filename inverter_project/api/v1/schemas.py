@@ -12,6 +12,7 @@ from api.common.limits import (
     MAX_POWER_RATING_W,
     MAX_QUANTITY,
 )
+from api.common.schemas import WarningOut
 
 BatteryCapacity = Literal[150, 200, 220, 250]
 SystemVoltage = Literal[12, 24, 48]
@@ -111,9 +112,7 @@ class V1CalculationOut(msgspec.Struct):
         ),
     ]
     warnings: Annotated[
-        list[str],
-        Meta(
-            description="Sizing advice, e.g. when system_voltage is low for the load."
-        ),
+        list[WarningOut],
+        Meta(description="Sizing advice (empty when none). Each has a stable `code`."),
     ]
     items: Annotated[list[V1ApplianceItemOut], Meta(examples=[_EXAMPLE_ITEMS_OUT])]

@@ -14,7 +14,7 @@ from api.common.appliance_endpoint import (
 from api.common.errors import unknown_appliance_to_validation_error
 from api.common.exceptions import UnknownApplianceError
 from api.common.routing import Routes
-from api.common.schemas import ApplianceOut
+from api.common.schemas import ApplianceOut, WarningOut
 
 from .schemas import V1ApplianceItemOut, V1CalculationIn, V1CalculationOut
 from .services import V1CalculationRequest, V1CalculationService, V1ItemRequest
@@ -71,7 +71,10 @@ async def v1_calculate(data: V1CalculationIn) -> V1CalculationOut:
         system_voltage=request.system_voltage,
         solar_panel_watt=request.solar_panel_watt,
         recommended_system_voltage=result.recommended_system_voltage,
-        warnings=list(result.warnings),
+        warnings=[
+            WarningOut(w.code, w.message, w.recommended_system_voltage)
+            for w in result.warnings
+        ],
         items=[
             V1ApplianceItemOut(i.id, i.name, i.quantity, i.power_rating)
             for i in result.items

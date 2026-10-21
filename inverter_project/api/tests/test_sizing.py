@@ -42,14 +42,44 @@ class SizingModelTests(SimpleTestCase):
             with self.subTest(kva=kva):
                 self.assertEqual(sizing.recommended_system_voltage(kva), voltage)
 
-    def test_voltage_warnings(self):
-        self.assertEqual(sizing.voltage_warnings(24, 24, 2), [])
-        self.assertEqual(sizing.voltage_warnings(48, 24, 9), [])
-        (low,) = sizing.voltage_warnings(12, 24, 2)
-        self.assertIn("24V is recommended", low)
-        self.assertNotIn("parallel", low)
-        (many,) = sizing.voltage_warnings(12, 48, 5)
-        self.assertIn("5 parallel battery strings", many)
+    def test_voltage_advice_low_voltage_warning(self):
+        rec, warnings = sizing.voltage_advice(12, 2.5, 100, 200)
+        self.assertEqual(rec, 24)
+        (w,) = warnings
+        self.assertEqual(w.code, sizing.LOW_VOLTAGE)
+        self.assertEqual(w.recommended_system_voltage, 24)
+        self.assertIn("24V is recommended", w.message)
+
+    def test_voltage_advice_no_warning_at_or_above_recommendation(self):
+        self.assertEqual(sizing.voltage_advice(24, 2.5, 100, 200)[1], [])
+        self.assertEqual(sizing.voltage_advice(48, 2.5, 100, 200)[1], [])
+
+    def test_many_strings_warns_even_when_voltage_is_high_enough(self):
+        # 0.4 kVA -> 12V is enough, but 1000 Ah of 200 Ah batteries = 5 strings
+        rec, warnings = sizing.voltage_advice(12, 0.4, 1000, 200)
+        self.assertEqual(rec, 12)
+        (w,) = warnings
+        self.assertEqual(w.code, sizing.MANY_PARALLEL_STRINGS)
+        self.assertEqual(w.recommended_system_voltage, 24)
+        self.assertIn("5 parallel", w.message)
+
+    def test_many_strings_at_top_voltage_has_no_voltage_suggestion(self):
+        (w,) = sizing.voltage_advice(48, 0.4, 1000, 200)[1]
+        self.assertIsNone(w.recommended_system_voltage)
+        self.assertIn("larger batteries", w.message)
+
+    def test_both_warnings_are_independent(self):
+        _, warnings = sizing.voltage_advice(12, 2.5, 1000, 200)
+        self.assertEqual(
+            [w.code for w in warnings],
+            [sizing.LOW_VOLTAGE, sizing.MANY_PARALLEL_STRINGS],
+        )
+
+    def test_custom_thresholds(self):
+        tiers = ((0.5, 12), (1.0, 24))
+        self.assertEqual(sizing.recommended_system_voltage(0.8, tiers), 24)
+        _, warnings = sizing.voltage_advice(12, 0.1, 400, 200, max_parallel_strings=1)
+        self.assertEqual(warnings[0].code, sizing.MANY_PARALLEL_STRINGS)
 
     def test_zero_guards(self):
         self.assertEqual(sizing.battery_capacity_ah(100, 0), 0)
