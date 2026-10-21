@@ -69,16 +69,16 @@ class V2CalculationService:
             )
             for item in request.items
         )
-        recommended = sizing.recommended_system_voltage(output.inverter_rating)
-        strings = sizing.safe_ceil(
-            output.total_battery_capacity / request.battery_capacity
+        recommended, warnings = sizing.voltage_advice(
+            request.system_voltage,
+            output.inverter_rating,
+            output.total_battery_capacity,
+            request.battery_capacity,
         )
         return V2CalculationResult(
             request=request,
             output=output,
             items=items,
             recommended_system_voltage=recommended,
-            warnings=tuple(
-                sizing.voltage_warnings(request.system_voltage, recommended, strings)
-            ),
+            warnings=tuple(warnings),
         )

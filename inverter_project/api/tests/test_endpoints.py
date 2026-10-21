@@ -81,6 +81,21 @@ class EndpointTests(TestCase):
             ],
         )
 
+    def test_v1_recommends_voltage_and_warns_when_low(self):
+        item = {"id": self.appliances[0].id, "quantity": 1, "power_rating": 4000}
+        fine = self.client.post(V1_URL, json=self.v1_payload()).json()
+        low = self.client.post(
+            V1_URL, json=self.v1_payload(system_voltage=12, items=[item])
+        ).json()
+        ok = self.client.post(
+            V1_URL, json=self.v1_payload(system_voltage=48, items=[item])
+        ).json()
+        self.assertEqual(fine["recommended_system_voltage"], 12)
+        self.assertEqual(fine["warnings"], [])
+        self.assertEqual(low["recommended_system_voltage"], 48)
+        self.assertEqual(len(low["warnings"]), 1)
+        self.assertEqual(ok["warnings"], [])
+
     def test_v1_defaults_quantity_and_power_rating(self):
         response = self.client.post(
             V1_URL, json=self.v1_payload(items=[{"id": self.appliances[1].id}])

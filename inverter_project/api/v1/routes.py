@@ -70,6 +70,8 @@ async def v1_calculate(data: V1CalculationIn) -> V1CalculationOut:
         battery_capacity=request.battery_capacity,
         system_voltage=request.system_voltage,
         solar_panel_watt=request.solar_panel_watt,
+        recommended_system_voltage=result.recommended_system_voltage,
+        warnings=list(result.warnings),
         items=[
             V1ApplianceItemOut(i.id, i.name, i.quantity, i.power_rating)
             for i in result.items

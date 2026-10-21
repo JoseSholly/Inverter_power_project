@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from api.common import sizing
 from api.common.appliances import get_appliance_names
 
 from .calculator import LoadItem, V1CalculationInput, V1CalculationOutput, V1Calculator
@@ -36,6 +37,8 @@ class V1CalculationResult:
     request: V1CalculationRequest
     output: V1CalculationOutput
     items: tuple[V1ResolvedItem, ...]
+    recommended_system_voltage: int
+    warnings: tuple[str, ...]
 
 
 class V1CalculationService:
@@ -64,4 +67,16 @@ class V1CalculationService:
             )
             for item in request.items
         )
-        return V1CalculationResult(request=request, output=output, items=items)
+        recommended, warnings = sizing.voltage_advice(
+            request.system_voltage,
+            output.inverter_rating,
+            output.total_battery_capacity,
+            request.battery_capacity,
+        )
+        return V1CalculationResult(
+            request=request,
+            output=output,
+            items=items,
+            recommended_system_voltage=recommended,
+            warnings=tuple(warnings),
+        )

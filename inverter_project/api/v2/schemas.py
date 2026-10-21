@@ -138,6 +138,8 @@ class V2CalculationOut(msgspec.Struct):
     ]
     warnings: Annotated[
         list[str],
-        Meta(description="Sizing advice, e.g. when system_voltage is low for the load."),
+        Meta(
+            description="Sizing advice, e.g. when system_voltage is low for the load."
+        ),
     ]
     items: Annotated[list[V2ApplianceItemOut], Meta(examples=[_EXAMPLE_ITEMS_OUT])]

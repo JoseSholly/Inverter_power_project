@@ -72,6 +72,18 @@ def voltage_warnings(
     return [message]
 
 
+def voltage_advice(
+    system_voltage: float,
+    inverter_kva: float,
+    bank_capacity_ah: float,
+    battery_capacity_ah: float,
+) -> tuple[int, list[str]]:
+    """(recommended voltage, warnings) for a finished calculation."""
+    recommended = recommended_system_voltage(inverter_kva)
+    strings = safe_ceil(bank_capacity_ah / battery_capacity_ah)
+    return recommended, voltage_warnings(system_voltage, recommended, strings)
+
+
 def battery_capacity_ah(energy_wh: float, system_voltage: float) -> float:
     """Battery bank capacity (Ah at the system voltage) that delivers energy_wh
     through the inverter without discharging below the allowed depth."""

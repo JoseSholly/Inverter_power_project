@@ -103,4 +103,17 @@ class V1CalculationOut(msgspec.Struct):
     battery_capacity: Annotated[int, Meta(examples=[200])]
     system_voltage: Annotated[int, Meta(examples=[24])]
     solar_panel_watt: Annotated[int, Meta(examples=[400])]
+    recommended_system_voltage: Annotated[
+        int,
+        Meta(
+            description="12V up to 1 kVA, 24V up to 3 kVA, 48V above. Advice only; results use system_voltage.",
+            examples=[24],
+        ),
+    ]
+    warnings: Annotated[
+        list[str],
+        Meta(
+            description="Sizing advice, e.g. when system_voltage is low for the load."
+        ),
+    ]
     items: Annotated[list[V1ApplianceItemOut], Meta(examples=[_EXAMPLE_ITEMS_OUT])]

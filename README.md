@@ -254,7 +254,7 @@ An appliance ID that isn't in the database gets one error per offending item:
 |---|---|---|---|
 | `backup_time` | integer | yes | 1–24 (hours; applies to every appliance) |
 | `battery_capacity` | integer | yes | `150`, `200`, `220`, `250` (Ah of one 12 V battery) |
-| `system_voltage` | integer | yes | `12`, `24`, `48` (V) |
+| `system_voltage` | integer | yes | `12`, `24`, `48` (V). Used as sent; a low value for the load adds a `warnings` entry |
 | `solar_panel_watt` | integer | yes | `300`, `350`, `400`, `450` (W of one panel) |
 | `items` | array | yes | 1–100 items |
 | `items[].id` | integer | yes | an existing appliance ID |
@@ -317,6 +317,8 @@ Response `200 OK`:
   "battery_capacity": 200,
   "system_voltage": 24,
   "solar_panel_watt": 350,
+  "recommended_system_voltage": 24,
+  "warnings": [],
   "items": [
     {"id": 8,  "name": "LED Light",       "quantity": 6, "power_rating": 10},
     {"id": 18, "name": "Radio",           "quantity": 3, "power_rating": 75},
@@ -379,8 +381,8 @@ Both versions share one sizing model (`api/common/sizing.py`). The **only** diff
 | Peak sun hours (PSH) | 6 h | average daily full-sun hours |
 | Solar system efficiency (η<sub>sol</sub>) | 0.8 | panel derating, controller and charging losses |
 | Controller safety factor | 1.25 | headroom over the array current |
-| Voltage tiers (v2) | ≤ 1 kVA → 12 V, ≤ 3 kVA → 24 V, else 48 V | recommended `system_voltage` for the inverter size |
-| Max parallel strings (v2) | 3 | more than this adds a voltage warning |
+| Voltage tiers | ≤ 1 kVA → 12 V, ≤ 3 kVA → 24 V, else 48 V | recommended `system_voltage` for the inverter size |
+| Max parallel strings | 3 | more than this adds a voltage warning |
 
 Symbols: **V** = `system_voltage`, **C** = `battery_capacity` (Ah of one battery), **W** = `solar_panel_watt`.
 All results are rounded to 2 decimals. Counts are rounded **up**, ignoring float noise such as 3.0000000000000004.
@@ -417,7 +419,7 @@ Why these formulas:
 - **Battery count**: a 24 V bank needs 2 × 12 V batteries in series per string, a 48 V bank needs 4. You add parallel strings until the Ah is covered.
 - **Solar** must put back E every day in 6 sun-hours, after 20% losses.
 - **Currents** are based on the panels actually installed (N × W), because that is what the controller has to handle.
-- **Recommended voltage (v2 only)**: for the same watts, current = P ÷ V, so a 12 V bank carries twice the current of a 24 V one. That means thicker cables, hotter connections and more parallel battery strings. The API recommends **12 V up to 1 kVA, 24 V up to 3 kVA and 48 V above** (based on `inverter_rating`), and adds a `warnings` entry when your `system_voltage` is lower. It also mentions it if the bank needs more than 3 parallel strings. The calculation itself is never changed.
+- **Recommended voltage (v1 and v2)**: for the same watts, current = P ÷ V, so a 12 V bank carries twice the current of a 24 V one. That means thicker cables, hotter connections and more parallel battery strings. The API recommends **12 V up to 1 kVA, 24 V up to 3 kVA and 48 V above** (based on `inverter_rating`), and adds a `warnings` entry when your `system_voltage` is lower. It also mentions it if the bank needs more than 3 parallel strings. The calculation itself is never changed.
 
 ## Worked Scenarios
 The same home is sized with both versions. Appliance IDs match a fresh database loaded with `populate_appliances`.
@@ -470,6 +472,8 @@ Response `200 OK` (items abbreviated):
   "battery_capacity": 200,
   "system_voltage": 24,
   "solar_panel_watt": 400,
+  "recommended_system_voltage": 12,
+  "warnings": [],
   "items": [{"id": 8, "name": "LED Light", "quantity": 4, "power_rating": 10}, "..."]
 }
 ```
@@ -729,7 +733,7 @@ docker push <user>/inverter-power:latest
 - v1 `inverter_rating` is rounded to 2 decimals, like v2.
 - **One sizing model for both versions.** Battery capacity now allows for inverter losses (0.8) and a 50% depth of discharge, so the bank is no longer undersized. Before, v2 had neither and v1 had only the inverter factor. Solar is rounded once, at the end. Both versions return `total_current` (installed array) and `controller_current` (array × 1.25). Before, v2 sized the controller from the required capacity instead of the installed panels.
 - v2 `system_voltage` must be a multiple of 12 V, because batteries are 12 V units.
-- **New (v2)**: the response includes `recommended_system_voltage` (12 V up to 1 kVA, 24 V up to 3 kVA, 48 V above) and a `warnings` list. A warning appears when the chosen voltage is below the recommendation. It is advice only: the numbers always use the `system_voltage` you sent. v1 is unchanged.
+- **New (v1 and v2)**: the response includes `recommended_system_voltage` (12 V up to 1 kVA, 24 V up to 3 kVA, 48 V above) and a `warnings` list. A warning appears when the chosen voltage is below the recommendation. It is advice only: the numbers always use the `system_voltage` you sent.
 - `items` must contain 1–100 appliances, and every numeric input has a realistic upper limit. Absurd values used to crash the server (500) or return nonsense.
 - The wrong HTTP method still returns **405** with an `Allow` header, as with DRF. Paths now also work **without the trailing slash**: DRF redirected them (301), and a POST was then lost.
 - New: `?name=` filter on the appliance endpoints, a Redis-backed appliance cache with automatic invalidation, and ETag/304 support.
