@@ -14,9 +14,9 @@ from api.common.limits import (
 )
 from api.common.schemas import WarningOut
 
-BatteryCapacity = Literal[150, 200, 220, 250]
+BatteryCapacity = Literal[65, 75, 100, 120, 150, 200, 220, 250]
 SystemVoltage = Literal[12, 24, 48]
-SolarPanelWatt = Literal[300, 350, 400, 450]
+SolarPanelWatt = Literal[100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650]
 
 
 _EXAMPLE_ITEMS_IN = [

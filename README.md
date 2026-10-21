@@ -4,7 +4,7 @@ A stateless API that sizes a home backup power system. You send a list of applia
 
 There are two versions of the calculation:
 
-- **v1** uses **one backup time for all appliances** and only accepts standard component sizes (12/24/48 V systems, 150–250 Ah batteries, 300–450 W panels).
+- **v1** uses **one backup time for all appliances** and only accepts standard component sizes (12/24/48 V systems, 65–250 Ah batteries, 100–650 W panels).
 - **v2** lets **each appliance have its own backup time**. It accepts any system voltage that is a multiple of 12 V, and any positive battery capacity and panel wattage.
 
 Apart from how energy demand is worked out, both versions use the **same sizing model** (`api/common/sizing.py`). If every appliance has the same backup time, v1 and v2 return identical results.
@@ -256,9 +256,9 @@ An appliance ID that isn't in the database gets one error per offending item:
 | Field | Type | Required | Allowed values |
 |---|---|---|---|
 | `backup_time` | integer | yes | 1–24 (hours; applies to every appliance) |
-| `battery_capacity` | integer | yes | `150`, `200`, `220`, `250` (Ah of one 12 V battery) |
+| `battery_capacity` | integer | yes | `65`, `75`, `100`, `120`, `150`, `200`, `220`, `250` (Ah of one 12 V battery) |
 | `system_voltage` | integer | yes | `12`, `24`, `48` (V). Used as sent; a low value for the load adds a `warnings` entry |
-| `solar_panel_watt` | integer | yes | `300`, `350`, `400`, `450` (W of one panel) |
+| `solar_panel_watt` | integer | yes | `100`, `150`, `200`, `250`, `300`, `350`, `400`, `450`, `500`, `550`, `600`, `650` (W of one panel) |
 | `items` | array | yes | 1–100 items |
 | `items[].id` | integer | yes | an existing appliance ID |
 | `items[].quantity` | integer | no (default `1`) | 1–1,000 |

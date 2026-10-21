@@ -1,0 +1,1799 @@
+{
+  "note": "Generated from the real endpoints. Appliance IDs match a fresh DB loaded with `manage.py populate_appliances`.",
+  "cases": [
+    {
+      "case": "1 small flat",
+      "version": "v2",
+      "description": "Small load on 12V. No warnings.",
+      "endpoint": "POST /api/v2/power_calculator/calculate/",
+      "request": {
+        "system_voltage": 12,
+        "battery_capacity": 200,
+        "solar_panel_watt": 350,
+        "items": [
+          {
+            "id": 8,
+            "quantity": 5,
+            "power_rating": 10,
+            "backup_time": 6
+          },
+          {
+            "id": 1,
+            "quantity": 1,
+            "power_rating": 12,
+            "backup_time": 12
+          },
+          {
+            "id": 2,
+            "quantity": 3,
+            "power_rating": 10,
+            "backup_time": 3
+          },
+          {
+            "id": 4,
+            "quantity": 1,
+            "power_rating": 80,
+            "backup_time": 4
+          }
+        ]
+      },
+      "response": {
+        "system_voltage": 12.0,
+        "battery_capacity": 200.0,
+        "solar_panel_watt": 350.0,
+        "total_load": 172.0,
+        "inverter_rating": 0.21,
+        "total_battery_capacity": 177.92,
+        "numbers_of_batteries": 1,
+        "total_solar_panel_capacity_needed": 177.92,
+        "numbers_of_solar_panel": 1,
+        "total_current": 29.17,
+        "controller_current": 36.46,
+        "recommended_system_voltage": 12,
+        "warnings": [],
+        "items": [
+          {
+            "id": 8,
+            "name": "LED Light",
+            "quantity": 5,
+            "power_rating": 10.0,
+            "backup_time": 6.0
+          },
+          {
+            "id": 1,
+            "name": "Wifi Router",
+            "quantity": 1,
+            "power_rating": 12.0,
+            "backup_time": 12.0
+          },
+          {
+            "id": 2,
+            "name": "Phone Charger",
+            "quantity": 3,
+            "power_rating": 10.0,
+            "backup_time": 3.0
+          },
+          {
+            "id": 4,
+            "name": "TV",
+            "quantity": 1,
+            "power_rating": 80.0,
+            "backup_time": 4.0
+          }
+        ]
+      }
+    },
+    {
+      "case": "1 small flat",
+      "version": "v1",
+      "description": "Small load on 12V. No warnings.",
+      "endpoint": "POST /api/v1/power_calculator/calculate/",
+      "request": {
+        "backup_time": 6,
+        "battery_capacity": 200,
+        "system_voltage": 12,
+        "solar_panel_watt": 350,
+        "items": [
+          {
+            "id": 8,
+            "quantity": 5,
+            "power_rating": 10
+          },
+          {
+            "id": 1,
+            "quantity": 1,
+            "power_rating": 12
+          },
+          {
+            "id": 2,
+            "quantity": 3,
+            "power_rating": 10
+          },
+          {
+            "id": 4,
+            "quantity": 1,
+            "power_rating": 80
+          }
+        ]
+      },
+      "response": {
+        "total_load": 172,
+        "inverter_rating": 0.21,
+        "total_battery_capacity": 215.0,
+        "numbers_of_batteries": 2,
+        "total_solar_panel_capacity_needed": 215.0,
+        "numbers_of_solar_panel": 1,
+        "total_current": 29.17,
+        "controller_current": 36.46,
+        "backup_time": 6,
+        "battery_capacity": 200,
+        "system_voltage": 12,
+        "solar_panel_watt": 350,
+        "recommended_system_voltage": 12,
+        "warnings": [],
+        "items": [
+          {
+            "id": 8,
+            "name": "LED Light",
+            "quantity": 5,
+            "power_rating": 10
+          },
+          {
+            "id": 1,
+            "name": "Wifi Router",
+            "quantity": 1,
+            "power_rating": 12
+          },
+          {
+            "id": 2,
+            "name": "Phone Charger",
+            "quantity": 3,
+            "power_rating": 10
+          },
+          {
+            "id": 4,
+            "name": "TV",
+            "quantity": 1,
+            "power_rating": 80
+          }
+        ]
+      }
+    },
+    {
+      "case": "2 family home",
+      "version": "v2",
+      "description": "24V is above the 12V minimum for this load. No warnings.",
+      "endpoint": "POST /api/v2/power_calculator/calculate/",
+      "request": {
+        "system_voltage": 24,
+        "battery_capacity": 200,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 8,
+            "quantity": 8,
+            "power_rating": 10,
+            "backup_time": 6
+          },
+          {
+            "id": 26,
+            "quantity": 3,
+            "power_rating": 70,
+            "backup_time": 8
+          },
+          {
+            "id": 4,
+            "quantity": 1,
+            "power_rating": 120,
+            "backup_time": 5
+          },
+          {
+            "id": 12,
+            "quantity": 1,
+            "power_rating": 150,
+            "backup_time": 10
+          },
+          {
+            "id": 11,
+            "quantity": 2,
+            "power_rating": 65,
+            "backup_time": 4
+          }
+        ]
+      },
+      "response": {
+        "system_voltage": 24.0,
+        "battery_capacity": 200.0,
+        "solar_panel_watt": 400.0,
+        "total_load": 690.0,
+        "inverter_rating": 0.86,
+        "total_battery_capacity": 497.92,
+        "numbers_of_batteries": 6,
+        "total_solar_panel_capacity_needed": 995.83,
+        "numbers_of_solar_panel": 3,
+        "total_current": 50.0,
+        "controller_current": 62.5,
+        "recommended_system_voltage": 12,
+        "warnings": [],
+        "items": [
+          {
+            "id": 8,
+            "name": "LED Light",
+            "quantity": 8,
+            "power_rating": 10.0,
+            "backup_time": 6.0
+          },
+          {
+            "id": 26,
+            "name": "Ceiling Fan",
+            "quantity": 3,
+            "power_rating": 70.0,
+            "backup_time": 8.0
+          },
+          {
+            "id": 4,
+            "name": "TV",
+            "quantity": 1,
+            "power_rating": 120.0,
+            "backup_time": 5.0
+          },
+          {
+            "id": 12,
+            "name": "Refrigerator",
+            "quantity": 1,
+            "power_rating": 150.0,
+            "backup_time": 10.0
+          },
+          {
+            "id": 11,
+            "name": "Laptop",
+            "quantity": 2,
+            "power_rating": 65.0,
+            "backup_time": 4.0
+          }
+        ]
+      }
+    },
+    {
+      "case": "2 family home",
+      "version": "v1",
+      "description": "24V is above the 12V minimum for this load. No warnings.",
+      "endpoint": "POST /api/v1/power_calculator/calculate/",
+      "request": {
+        "backup_time": 6,
+        "battery_capacity": 200,
+        "system_voltage": 24,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 8,
+            "quantity": 8,
+            "power_rating": 10
+          },
+          {
+            "id": 26,
+            "quantity": 3,
+            "power_rating": 70
+          },
+          {
+            "id": 4,
+            "quantity": 1,
+            "power_rating": 120
+          },
+          {
+            "id": 12,
+            "quantity": 1,
+            "power_rating": 150
+          },
+          {
+            "id": 11,
+            "quantity": 2,
+            "power_rating": 65
+          }
+        ]
+      },
+      "response": {
+        "total_load": 690,
+        "inverter_rating": 0.86,
+        "total_battery_capacity": 431.25,
+        "numbers_of_batteries": 6,
+        "total_solar_panel_capacity_needed": 862.5,
+        "numbers_of_solar_panel": 3,
+        "total_current": 50.0,
+        "controller_current": 62.5,
+        "backup_time": 6,
+        "battery_capacity": 200,
+        "system_voltage": 24,
+        "solar_panel_watt": 400,
+        "recommended_system_voltage": 12,
+        "warnings": [],
+        "items": [
+          {
+            "id": 8,
+            "name": "LED Light",
+            "quantity": 8,
+            "power_rating": 10
+          },
+          {
+            "id": 26,
+            "name": "Ceiling Fan",
+            "quantity": 3,
+            "power_rating": 70
+          },
+          {
+            "id": 4,
+            "name": "TV",
+            "quantity": 1,
+            "power_rating": 120
+          },
+          {
+            "id": 12,
+            "name": "Refrigerator",
+            "quantity": 1,
+            "power_rating": 150
+          },
+          {
+            "id": 11,
+            "name": "Laptop",
+            "quantity": 2,
+            "power_rating": 65
+          }
+        ]
+      }
+    },
+    {
+      "case": "3 heavy kitchen on 12V",
+      "version": "v2",
+      "description": "12V with a 3.45 kVA load: LOW_VOLTAGE and MANY_PARALLEL_STRINGS.",
+      "endpoint": "POST /api/v2/power_calculator/calculate/",
+      "request": {
+        "system_voltage": 12,
+        "battery_capacity": 200,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 12,
+            "quantity": 1,
+            "power_rating": 200,
+            "backup_time": 10
+          },
+          {
+            "id": 5,
+            "quantity": 1,
+            "power_rating": 1000,
+            "backup_time": 1
+          },
+          {
+            "id": 21,
+            "quantity": 1,
+            "power_rating": 1500,
+            "backup_time": 1
+          },
+          {
+            "id": 8,
+            "quantity": 6,
+            "power_rating": 10,
+            "backup_time": 5
+          }
+        ]
+      },
+      "response": {
+        "system_voltage": 12.0,
+        "battery_capacity": 200.0,
+        "solar_panel_watt": 400.0,
+        "total_load": 2760.0,
+        "inverter_rating": 3.45,
+        "total_battery_capacity": 1000.0,
+        "numbers_of_batteries": 5,
+        "total_solar_panel_capacity_needed": 1000.0,
+        "numbers_of_solar_panel": 3,
+        "total_current": 100.0,
+        "controller_current": 125.0,
+        "recommended_system_voltage": 48,
+        "warnings": [
+          {
+            "code": "LOW_VOLTAGE",
+            "message": "A 12V system is low for this load; 48V is recommended.",
+            "recommended_system_voltage": 48
+          },
+          {
+            "code": "MANY_PARALLEL_STRINGS",
+            "message": "The bank needs 5 parallel battery strings (more than 3); a 24V system or larger batteries would reduce this.",
+            "recommended_system_voltage": 24
+          }
+        ],
+        "items": [
+          {
+            "id": 12,
+            "name": "Refrigerator",
+            "quantity": 1,
+            "power_rating": 200.0,
+            "backup_time": 10.0
+          },
+          {
+            "id": 5,
+            "name": "Microwave Oven",
+            "quantity": 1,
+            "power_rating": 1000.0,
+            "backup_time": 1.0
+          },
+          {
+            "id": 21,
+            "name": "Electric Kettle",
+            "quantity": 1,
+            "power_rating": 1500.0,
+            "backup_time": 1.0
+          },
+          {
+            "id": 8,
+            "name": "LED Light",
+            "quantity": 6,
+            "power_rating": 10.0,
+            "backup_time": 5.0
+          }
+        ]
+      }
+    },
+    {
+      "case": "3 heavy kitchen on 12V",
+      "version": "v1",
+      "description": "12V with a 3.45 kVA load: LOW_VOLTAGE and MANY_PARALLEL_STRINGS.",
+      "endpoint": "POST /api/v1/power_calculator/calculate/",
+      "request": {
+        "backup_time": 3,
+        "battery_capacity": 200,
+        "system_voltage": 12,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 12,
+            "quantity": 1,
+            "power_rating": 200
+          },
+          {
+            "id": 5,
+            "quantity": 1,
+            "power_rating": 1000
+          },
+          {
+            "id": 21,
+            "quantity": 1,
+            "power_rating": 1500
+          },
+          {
+            "id": 8,
+            "quantity": 6,
+            "power_rating": 10
+          }
+        ]
+      },
+      "response": {
+        "total_load": 2760,
+        "inverter_rating": 3.45,
+        "total_battery_capacity": 1725.0,
+        "numbers_of_batteries": 9,
+        "total_solar_panel_capacity_needed": 1725.0,
+        "numbers_of_solar_panel": 5,
+        "total_current": 166.67,
+        "controller_current": 208.33,
+        "backup_time": 3,
+        "battery_capacity": 200,
+        "system_voltage": 12,
+        "solar_panel_watt": 400,
+        "recommended_system_voltage": 48,
+        "warnings": [
+          {
+            "code": "LOW_VOLTAGE",
+            "message": "A 12V system is low for this load; 48V is recommended.",
+            "recommended_system_voltage": 48
+          },
+          {
+            "code": "MANY_PARALLEL_STRINGS",
+            "message": "The bank needs 9 parallel battery strings (more than 3); a 24V system or larger batteries would reduce this.",
+            "recommended_system_voltage": 24
+          }
+        ],
+        "items": [
+          {
+            "id": 12,
+            "name": "Refrigerator",
+            "quantity": 1,
+            "power_rating": 200
+          },
+          {
+            "id": 5,
+            "name": "Microwave Oven",
+            "quantity": 1,
+            "power_rating": 1000
+          },
+          {
+            "id": 21,
+            "name": "Electric Kettle",
+            "quantity": 1,
+            "power_rating": 1500
+          },
+          {
+            "id": 8,
+            "name": "LED Light",
+            "quantity": 6,
+            "power_rating": 10
+          }
+        ]
+      }
+    },
+    {
+      "case": "4 low power for 24h",
+      "version": "v2",
+      "description": "Small load that runs 24h: only MANY_PARALLEL_STRINGS (voltage is fine).",
+      "endpoint": "POST /api/v2/power_calculator/calculate/",
+      "request": {
+        "system_voltage": 24,
+        "battery_capacity": 100,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 24,
+            "quantity": 4,
+            "power_rating": 15,
+            "backup_time": 24
+          },
+          {
+            "id": 1,
+            "quantity": 1,
+            "power_rating": 12,
+            "backup_time": 24
+          },
+          {
+            "id": 28,
+            "quantity": 1,
+            "power_rating": 200,
+            "backup_time": 24
+          }
+        ]
+      },
+      "response": {
+        "system_voltage": 24.0,
+        "battery_capacity": 100.0,
+        "solar_panel_watt": 400.0,
+        "total_load": 272.0,
+        "inverter_rating": 0.34,
+        "total_battery_capacity": 680.0,
+        "numbers_of_batteries": 14,
+        "total_solar_panel_capacity_needed": 1360.0,
+        "numbers_of_solar_panel": 4,
+        "total_current": 66.67,
+        "controller_current": 83.33,
+        "recommended_system_voltage": 12,
+        "warnings": [
+          {
+            "code": "MANY_PARALLEL_STRINGS",
+            "message": "The bank needs 7 parallel battery strings (more than 3); a 48V system or larger batteries would reduce this.",
+            "recommended_system_voltage": 48
+          }
+        ],
+        "items": [
+          {
+            "id": 24,
+            "name": "Security Cameras",
+            "quantity": 4,
+            "power_rating": 15.0,
+            "backup_time": 24.0
+          },
+          {
+            "id": 1,
+            "name": "Wifi Router",
+            "quantity": 1,
+            "power_rating": 12.0,
+            "backup_time": 24.0
+          },
+          {
+            "id": 28,
+            "name": "Chest Freezer",
+            "quantity": 1,
+            "power_rating": 200.0,
+            "backup_time": 24.0
+          }
+        ]
+      }
+    },
+    {
+      "case": "4 low power for 24h",
+      "version": "v1",
+      "description": "Small load that runs 24h: only MANY_PARALLEL_STRINGS (voltage is fine).",
+      "endpoint": "POST /api/v1/power_calculator/calculate/",
+      "request": {
+        "backup_time": 24,
+        "battery_capacity": 100,
+        "system_voltage": 24,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 24,
+            "quantity": 4,
+            "power_rating": 15
+          },
+          {
+            "id": 1,
+            "quantity": 1,
+            "power_rating": 12
+          },
+          {
+            "id": 28,
+            "quantity": 1,
+            "power_rating": 200
+          }
+        ]
+      },
+      "response": {
+        "total_load": 272,
+        "inverter_rating": 0.34,
+        "total_battery_capacity": 680.0,
+        "numbers_of_batteries": 14,
+        "total_solar_panel_capacity_needed": 1360.0,
+        "numbers_of_solar_panel": 4,
+        "total_current": 66.67,
+        "controller_current": 83.33,
+        "backup_time": 24,
+        "battery_capacity": 100,
+        "system_voltage": 24,
+        "solar_panel_watt": 400,
+        "recommended_system_voltage": 12,
+        "warnings": [
+          {
+            "code": "MANY_PARALLEL_STRINGS",
+            "message": "The bank needs 7 parallel battery strings (more than 3); a 48V system or larger batteries would reduce this.",
+            "recommended_system_voltage": 48
+          }
+        ],
+        "items": [
+          {
+            "id": 24,
+            "name": "Security Cameras",
+            "quantity": 4,
+            "power_rating": 15
+          },
+          {
+            "id": 1,
+            "name": "Wifi Router",
+            "quantity": 1,
+            "power_rating": 12
+          },
+          {
+            "id": 28,
+            "name": "Chest Freezer",
+            "quantity": 1,
+            "power_rating": 200
+          }
+        ]
+      }
+    },
+    {
+      "case": "5 workshop on 12V",
+      "version": "v2",
+      "description": "Both warnings, recommends 24V.",
+      "endpoint": "POST /api/v2/power_calculator/calculate/",
+      "request": {
+        "system_voltage": 12,
+        "battery_capacity": 100,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 30,
+            "quantity": 1,
+            "power_rating": 750,
+            "backup_time": 3
+          },
+          {
+            "id": 10,
+            "quantity": 2,
+            "power_rating": 200,
+            "backup_time": 8
+          },
+          {
+            "id": 28,
+            "quantity": 1,
+            "power_rating": 200,
+            "backup_time": 24
+          },
+          {
+            "id": 8,
+            "quantity": 10,
+            "power_rating": 10,
+            "backup_time": 8
+          }
+        ]
+      },
+      "response": {
+        "system_voltage": 12.0,
+        "battery_capacity": 100.0,
+        "solar_panel_watt": 400.0,
+        "total_load": 1450.0,
+        "inverter_rating": 1.81,
+        "total_battery_capacity": 2302.08,
+        "numbers_of_batteries": 24,
+        "total_solar_panel_capacity_needed": 2302.08,
+        "numbers_of_solar_panel": 6,
+        "total_current": 200.0,
+        "controller_current": 250.0,
+        "recommended_system_voltage": 24,
+        "warnings": [
+          {
+            "code": "LOW_VOLTAGE",
+            "message": "A 12V system is low for this load; 24V is recommended.",
+            "recommended_system_voltage": 24
+          },
+          {
+            "code": "MANY_PARALLEL_STRINGS",
+            "message": "The bank needs 24 parallel battery strings (more than 3); a 24V system or larger batteries would reduce this.",
+            "recommended_system_voltage": 24
+          }
+        ],
+        "items": [
+          {
+            "id": 30,
+            "name": "Water Pump",
+            "quantity": 1,
+            "power_rating": 750.0,
+            "backup_time": 3.0
+          },
+          {
+            "id": 10,
+            "name": "Desktop Computer",
+            "quantity": 2,
+            "power_rating": 200.0,
+            "backup_time": 8.0
+          },
+          {
+            "id": 28,
+            "name": "Chest Freezer",
+            "quantity": 1,
+            "power_rating": 200.0,
+            "backup_time": 24.0
+          },
+          {
+            "id": 8,
+            "name": "LED Light",
+            "quantity": 10,
+            "power_rating": 10.0,
+            "backup_time": 8.0
+          }
+        ]
+      }
+    },
+    {
+      "case": "5 workshop on 12V",
+      "version": "v1",
+      "description": "Both warnings, recommends 24V.",
+      "endpoint": "POST /api/v1/power_calculator/calculate/",
+      "request": {
+        "backup_time": 8,
+        "battery_capacity": 100,
+        "system_voltage": 12,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 30,
+            "quantity": 1,
+            "power_rating": 750
+          },
+          {
+            "id": 10,
+            "quantity": 2,
+            "power_rating": 200
+          },
+          {
+            "id": 28,
+            "quantity": 1,
+            "power_rating": 200
+          },
+          {
+            "id": 8,
+            "quantity": 10,
+            "power_rating": 10
+          }
+        ]
+      },
+      "response": {
+        "total_load": 1450,
+        "inverter_rating": 1.81,
+        "total_battery_capacity": 2416.67,
+        "numbers_of_batteries": 25,
+        "total_solar_panel_capacity_needed": 2416.67,
+        "numbers_of_solar_panel": 7,
+        "total_current": 233.33,
+        "controller_current": 291.67,
+        "backup_time": 8,
+        "battery_capacity": 100,
+        "system_voltage": 12,
+        "solar_panel_watt": 400,
+        "recommended_system_voltage": 24,
+        "warnings": [
+          {
+            "code": "LOW_VOLTAGE",
+            "message": "A 12V system is low for this load; 24V is recommended.",
+            "recommended_system_voltage": 24
+          },
+          {
+            "code": "MANY_PARALLEL_STRINGS",
+            "message": "The bank needs 25 parallel battery strings (more than 3); a 24V system or larger batteries would reduce this.",
+            "recommended_system_voltage": 24
+          }
+        ],
+        "items": [
+          {
+            "id": 30,
+            "name": "Water Pump",
+            "quantity": 1,
+            "power_rating": 750
+          },
+          {
+            "id": 10,
+            "name": "Desktop Computer",
+            "quantity": 2,
+            "power_rating": 200
+          },
+          {
+            "id": 28,
+            "name": "Chest Freezer",
+            "quantity": 1,
+            "power_rating": 200
+          },
+          {
+            "id": 8,
+            "name": "LED Light",
+            "quantity": 10,
+            "power_rating": 10
+          }
+        ]
+      }
+    },
+    {
+      "case": "6 large home on 48V",
+      "version": "v2",
+      "description": "v2: no warnings. v1 (flat 6h): MANY_PARALLEL_STRINGS with a null suggestion.",
+      "endpoint": "POST /api/v2/power_calculator/calculate/",
+      "request": {
+        "system_voltage": 48,
+        "battery_capacity": 250,
+        "solar_panel_watt": 450,
+        "items": [
+          {
+            "id": 13,
+            "quantity": 1,
+            "power_rating": 1500,
+            "backup_time": 4
+          },
+          {
+            "id": 3,
+            "quantity": 1,
+            "power_rating": 150,
+            "backup_time": 10
+          },
+          {
+            "id": 8,
+            "quantity": 12,
+            "power_rating": 10,
+            "backup_time": 6
+          },
+          {
+            "id": 4,
+            "quantity": 2,
+            "power_rating": 120,
+            "backup_time": 5
+          },
+          {
+            "id": 15,
+            "quantity": 1,
+            "power_rating": 500,
+            "backup_time": 1
+          }
+        ]
+      },
+      "response": {
+        "system_voltage": 48.0,
+        "battery_capacity": 250.0,
+        "solar_panel_watt": 450.0,
+        "total_load": 2510.0,
+        "inverter_rating": 3.14,
+        "total_battery_capacity": 516.67,
+        "numbers_of_batteries": 12,
+        "total_solar_panel_capacity_needed": 2066.67,
+        "numbers_of_solar_panel": 5,
+        "total_current": 46.88,
+        "controller_current": 58.59,
+        "recommended_system_voltage": 48,
+        "warnings": [],
+        "items": [
+          {
+            "id": 13,
+            "name": "Air Conditioner (AC)",
+            "quantity": 1,
+            "power_rating": 1500.0,
+            "backup_time": 4.0
+          },
+          {
+            "id": 3,
+            "name": "Fridge",
+            "quantity": 1,
+            "power_rating": 150.0,
+            "backup_time": 10.0
+          },
+          {
+            "id": 8,
+            "name": "LED Light",
+            "quantity": 12,
+            "power_rating": 10.0,
+            "backup_time": 6.0
+          },
+          {
+            "id": 4,
+            "name": "TV",
+            "quantity": 2,
+            "power_rating": 120.0,
+            "backup_time": 5.0
+          },
+          {
+            "id": 15,
+            "name": "Washing Machine",
+            "quantity": 1,
+            "power_rating": 500.0,
+            "backup_time": 1.0
+          }
+        ]
+      }
+    },
+    {
+      "case": "6 large home on 48V",
+      "version": "v1",
+      "description": "v2: no warnings. v1 (flat 6h): MANY_PARALLEL_STRINGS with a null suggestion.",
+      "endpoint": "POST /api/v1/power_calculator/calculate/",
+      "request": {
+        "backup_time": 6,
+        "battery_capacity": 250,
+        "system_voltage": 48,
+        "solar_panel_watt": 450,
+        "items": [
+          {
+            "id": 13,
+            "quantity": 1,
+            "power_rating": 1500
+          },
+          {
+            "id": 3,
+            "quantity": 1,
+            "power_rating": 150
+          },
+          {
+            "id": 8,
+            "quantity": 12,
+            "power_rating": 10
+          },
+          {
+            "id": 4,
+            "quantity": 2,
+            "power_rating": 120
+          },
+          {
+            "id": 15,
+            "quantity": 1,
+            "power_rating": 500
+          }
+        ]
+      },
+      "response": {
+        "total_load": 2510,
+        "inverter_rating": 3.14,
+        "total_battery_capacity": 784.37,
+        "numbers_of_batteries": 16,
+        "total_solar_panel_capacity_needed": 3137.5,
+        "numbers_of_solar_panel": 7,
+        "total_current": 65.62,
+        "controller_current": 82.03,
+        "backup_time": 6,
+        "battery_capacity": 250,
+        "system_voltage": 48,
+        "solar_panel_watt": 450,
+        "recommended_system_voltage": 48,
+        "warnings": [
+          {
+            "code": "MANY_PARALLEL_STRINGS",
+            "message": "The bank needs 4 parallel battery strings (more than 3); larger batteries would reduce this.",
+            "recommended_system_voltage": null
+          }
+        ],
+        "items": [
+          {
+            "id": 13,
+            "name": "Air Conditioner (AC)",
+            "quantity": 1,
+            "power_rating": 1500
+          },
+          {
+            "id": 3,
+            "name": "Fridge",
+            "quantity": 1,
+            "power_rating": 150
+          },
+          {
+            "id": 8,
+            "name": "LED Light",
+            "quantity": 12,
+            "power_rating": 10
+          },
+          {
+            "id": 4,
+            "name": "TV",
+            "quantity": 2,
+            "power_rating": 120
+          },
+          {
+            "id": 15,
+            "name": "Washing Machine",
+            "quantity": 1,
+            "power_rating": 500
+          }
+        ]
+      }
+    },
+    {
+      "case": "7 huge load on 48V",
+      "version": "v2",
+      "description": "Already 48V but 100Ah batteries: MANY_PARALLEL_STRINGS, recommended_system_voltage null (use bigger batteries).",
+      "endpoint": "POST /api/v2/power_calculator/calculate/",
+      "request": {
+        "system_voltage": 48,
+        "battery_capacity": 100,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 13,
+            "quantity": 2,
+            "power_rating": 1500,
+            "backup_time": 8
+          },
+          {
+            "id": 28,
+            "quantity": 1,
+            "power_rating": 200,
+            "backup_time": 24
+          },
+          {
+            "id": 34,
+            "quantity": 1,
+            "power_rating": 2000,
+            "backup_time": 2
+          }
+        ]
+      },
+      "response": {
+        "system_voltage": 48.0,
+        "battery_capacity": 100.0,
+        "solar_panel_watt": 400.0,
+        "total_load": 5200.0,
+        "inverter_rating": 6.5,
+        "total_battery_capacity": 1708.33,
+        "numbers_of_batteries": 72,
+        "total_solar_panel_capacity_needed": 6833.33,
+        "numbers_of_solar_panel": 18,
+        "total_current": 150.0,
+        "controller_current": 187.5,
+        "recommended_system_voltage": 48,
+        "warnings": [
+          {
+            "code": "MANY_PARALLEL_STRINGS",
+            "message": "The bank needs 18 parallel battery strings (more than 3); larger batteries would reduce this.",
+            "recommended_system_voltage": null
+          }
+        ],
+        "items": [
+          {
+            "id": 13,
+            "name": "Air Conditioner (AC)",
+            "quantity": 2,
+            "power_rating": 1500.0,
+            "backup_time": 8.0
+          },
+          {
+            "id": 28,
+            "name": "Chest Freezer",
+            "quantity": 1,
+            "power_rating": 200.0,
+            "backup_time": 24.0
+          },
+          {
+            "id": 34,
+            "name": "Electric Cooker",
+            "quantity": 1,
+            "power_rating": 2000.0,
+            "backup_time": 2.0
+          }
+        ]
+      }
+    },
+    {
+      "case": "7 huge load on 48V",
+      "version": "v1",
+      "description": "Already 48V but 100Ah batteries: MANY_PARALLEL_STRINGS, recommended_system_voltage null (use bigger batteries).",
+      "endpoint": "POST /api/v1/power_calculator/calculate/",
+      "request": {
+        "backup_time": 8,
+        "battery_capacity": 100,
+        "system_voltage": 48,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 13,
+            "quantity": 2,
+            "power_rating": 1500
+          },
+          {
+            "id": 28,
+            "quantity": 1,
+            "power_rating": 200
+          },
+          {
+            "id": 34,
+            "quantity": 1,
+            "power_rating": 2000
+          }
+        ]
+      },
+      "response": {
+        "total_load": 5200,
+        "inverter_rating": 6.5,
+        "total_battery_capacity": 2166.67,
+        "numbers_of_batteries": 88,
+        "total_solar_panel_capacity_needed": 8666.67,
+        "numbers_of_solar_panel": 22,
+        "total_current": 183.33,
+        "controller_current": 229.17,
+        "backup_time": 8,
+        "battery_capacity": 100,
+        "system_voltage": 48,
+        "solar_panel_watt": 400,
+        "recommended_system_voltage": 48,
+        "warnings": [
+          {
+            "code": "MANY_PARALLEL_STRINGS",
+            "message": "The bank needs 22 parallel battery strings (more than 3); larger batteries would reduce this.",
+            "recommended_system_voltage": null
+          }
+        ],
+        "items": [
+          {
+            "id": 13,
+            "name": "Air Conditioner (AC)",
+            "quantity": 2,
+            "power_rating": 1500
+          },
+          {
+            "id": 28,
+            "name": "Chest Freezer",
+            "quantity": 1,
+            "power_rating": 200
+          },
+          {
+            "id": 34,
+            "name": "Electric Cooker",
+            "quantity": 1,
+            "power_rating": 2000
+          }
+        ]
+      }
+    },
+    {
+      "case": "8 exactly 800W (1.00 kVA)",
+      "version": "v2",
+      "description": "Tier boundary: exactly 1.00 kVA still recommends 12V. No warnings.",
+      "endpoint": "POST /api/v2/power_calculator/calculate/",
+      "request": {
+        "system_voltage": 12,
+        "battery_capacity": 250,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 8,
+            "quantity": 10,
+            "power_rating": 10,
+            "backup_time": 4
+          },
+          {
+            "id": 12,
+            "quantity": 1,
+            "power_rating": 700,
+            "backup_time": 4
+          }
+        ]
+      },
+      "response": {
+        "system_voltage": 12.0,
+        "battery_capacity": 250.0,
+        "solar_panel_watt": 400.0,
+        "total_load": 800.0,
+        "inverter_rating": 1.0,
+        "total_battery_capacity": 666.67,
+        "numbers_of_batteries": 3,
+        "total_solar_panel_capacity_needed": 666.67,
+        "numbers_of_solar_panel": 2,
+        "total_current": 66.67,
+        "controller_current": 83.33,
+        "recommended_system_voltage": 12,
+        "warnings": [],
+        "items": [
+          {
+            "id": 8,
+            "name": "LED Light",
+            "quantity": 10,
+            "power_rating": 10.0,
+            "backup_time": 4.0
+          },
+          {
+            "id": 12,
+            "name": "Refrigerator",
+            "quantity": 1,
+            "power_rating": 700.0,
+            "backup_time": 4.0
+          }
+        ]
+      }
+    },
+    {
+      "case": "8 exactly 800W (1.00 kVA)",
+      "version": "v1",
+      "description": "Tier boundary: exactly 1.00 kVA still recommends 12V. No warnings.",
+      "endpoint": "POST /api/v1/power_calculator/calculate/",
+      "request": {
+        "backup_time": 4,
+        "battery_capacity": 250,
+        "system_voltage": 12,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 8,
+            "quantity": 10,
+            "power_rating": 10
+          },
+          {
+            "id": 12,
+            "quantity": 1,
+            "power_rating": 700
+          }
+        ]
+      },
+      "response": {
+        "total_load": 800,
+        "inverter_rating": 1.0,
+        "total_battery_capacity": 666.67,
+        "numbers_of_batteries": 3,
+        "total_solar_panel_capacity_needed": 666.67,
+        "numbers_of_solar_panel": 2,
+        "total_current": 66.67,
+        "controller_current": 83.33,
+        "backup_time": 4,
+        "battery_capacity": 250,
+        "system_voltage": 12,
+        "solar_panel_watt": 400,
+        "recommended_system_voltage": 12,
+        "warnings": [],
+        "items": [
+          {
+            "id": 8,
+            "name": "LED Light",
+            "quantity": 10,
+            "power_rating": 10
+          },
+          {
+            "id": 12,
+            "name": "Refrigerator",
+            "quantity": 1,
+            "power_rating": 700
+          }
+        ]
+      }
+    },
+    {
+      "case": "9 840W (1.05 kVA)",
+      "version": "v2",
+      "description": "Just over the boundary: LOW_VOLTAGE recommends 24V.",
+      "endpoint": "POST /api/v2/power_calculator/calculate/",
+      "request": {
+        "system_voltage": 12,
+        "battery_capacity": 250,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 8,
+            "quantity": 10,
+            "power_rating": 10,
+            "backup_time": 4
+          },
+          {
+            "id": 12,
+            "quantity": 1,
+            "power_rating": 740,
+            "backup_time": 4
+          }
+        ]
+      },
+      "response": {
+        "system_voltage": 12.0,
+        "battery_capacity": 250.0,
+        "solar_panel_watt": 400.0,
+        "total_load": 840.0,
+        "inverter_rating": 1.05,
+        "total_battery_capacity": 700.0,
+        "numbers_of_batteries": 3,
+        "total_solar_panel_capacity_needed": 700.0,
+        "numbers_of_solar_panel": 2,
+        "total_current": 66.67,
+        "controller_current": 83.33,
+        "recommended_system_voltage": 24,
+        "warnings": [
+          {
+            "code": "LOW_VOLTAGE",
+            "message": "A 12V system is low for this load; 24V is recommended.",
+            "recommended_system_voltage": 24
+          }
+        ],
+        "items": [
+          {
+            "id": 8,
+            "name": "LED Light",
+            "quantity": 10,
+            "power_rating": 10.0,
+            "backup_time": 4.0
+          },
+          {
+            "id": 12,
+            "name": "Refrigerator",
+            "quantity": 1,
+            "power_rating": 740.0,
+            "backup_time": 4.0
+          }
+        ]
+      }
+    },
+    {
+      "case": "9 840W (1.05 kVA)",
+      "version": "v1",
+      "description": "Just over the boundary: LOW_VOLTAGE recommends 24V.",
+      "endpoint": "POST /api/v1/power_calculator/calculate/",
+      "request": {
+        "backup_time": 4,
+        "battery_capacity": 250,
+        "system_voltage": 12,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 8,
+            "quantity": 10,
+            "power_rating": 10
+          },
+          {
+            "id": 12,
+            "quantity": 1,
+            "power_rating": 740
+          }
+        ]
+      },
+      "response": {
+        "total_load": 840,
+        "inverter_rating": 1.05,
+        "total_battery_capacity": 700.0,
+        "numbers_of_batteries": 3,
+        "total_solar_panel_capacity_needed": 700.0,
+        "numbers_of_solar_panel": 2,
+        "total_current": 66.67,
+        "controller_current": 83.33,
+        "backup_time": 4,
+        "battery_capacity": 250,
+        "system_voltage": 12,
+        "solar_panel_watt": 400,
+        "recommended_system_voltage": 24,
+        "warnings": [
+          {
+            "code": "LOW_VOLTAGE",
+            "message": "A 12V system is low for this load; 24V is recommended.",
+            "recommended_system_voltage": 24
+          }
+        ],
+        "items": [
+          {
+            "id": 8,
+            "name": "LED Light",
+            "quantity": 10,
+            "power_rating": 10
+          },
+          {
+            "id": 12,
+            "name": "Refrigerator",
+            "quantity": 1,
+            "power_rating": 740
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "description": "v1: system_voltage 36 is not 12/24/48",
+      "endpoint": "POST /api/v1/power_calculator/calculate/",
+      "status": 422,
+      "request": {
+        "backup_time": 6,
+        "battery_capacity": 200,
+        "system_voltage": 36,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 8,
+            "quantity": 1,
+            "power_rating": 10
+          }
+        ]
+      },
+      "response": {
+        "detail": [
+          {
+            "loc": [
+              "body",
+              "system_voltage"
+            ],
+            "msg": "Invalid enum value 36",
+            "type": "validation_error"
+          }
+        ]
+      }
+    },
+    {
+      "description": "v1: battery 90Ah is not an offered size",
+      "endpoint": "POST /api/v1/power_calculator/calculate/",
+      "status": 422,
+      "request": {
+        "backup_time": 6,
+        "battery_capacity": 90,
+        "system_voltage": 24,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 8,
+            "quantity": 1,
+            "power_rating": 10
+          }
+        ]
+      },
+      "response": {
+        "detail": [
+          {
+            "loc": [
+              "body",
+              "battery_capacity"
+            ],
+            "msg": "Invalid enum value 90",
+            "type": "validation_error"
+          }
+        ]
+      }
+    },
+    {
+      "description": "v2: system_voltage 30 is not a multiple of 12",
+      "endpoint": "POST /api/v2/power_calculator/calculate/",
+      "status": 422,
+      "request": {
+        "system_voltage": 30,
+        "battery_capacity": 200,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 8,
+            "quantity": 1,
+            "power_rating": 10,
+            "backup_time": 4
+          }
+        ]
+      },
+      "response": {
+        "detail": [
+          {
+            "loc": [
+              "body",
+              "system_voltage"
+            ],
+            "msg": "Expected `float` that's a multiple of 12.0",
+            "type": "validation_error"
+          }
+        ]
+      }
+    },
+    {
+      "description": "v2: backup_time 25 is over 24h",
+      "endpoint": "POST /api/v2/power_calculator/calculate/",
+      "status": 422,
+      "request": {
+        "system_voltage": 24,
+        "battery_capacity": 200,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 8,
+            "quantity": 1,
+            "power_rating": 10,
+            "backup_time": 25
+          }
+        ]
+      },
+      "response": {
+        "detail": [
+          {
+            "loc": [
+              "body",
+              "items",
+              "0",
+              "backup_time"
+            ],
+            "msg": "Expected `float` <= 24.0",
+            "type": "validation_error"
+          }
+        ]
+      }
+    },
+    {
+      "description": "v2: unknown appliance id",
+      "endpoint": "POST /api/v2/power_calculator/calculate/",
+      "status": 422,
+      "request": {
+        "system_voltage": 24,
+        "battery_capacity": 200,
+        "solar_panel_watt": 400,
+        "items": [
+          {
+            "id": 9999,
+            "quantity": 1,
+            "power_rating": 10,
+            "backup_time": 4
+          }
+        ]
+      },
+      "response": {
+        "detail": [
+          {
+            "type": "unknown_appliance",
+            "loc": [
+              "body",
+              "items",
+              "0",
+              "id"
+            ],
+            "msg": "Appliance with ID 9999 does not exist.",
+            "input": 9999
+          }
+        ]
+      }
+    },
+    {
+      "description": "v2: empty items",
+      "endpoint": "POST /api/v2/power_calculator/calculate/",
+      "status": 422,
+      "request": {
+        "system_voltage": 24,
+        "battery_capacity": 200,
+        "solar_panel_watt": 400,
+        "items": []
+      },
+      "response": {
+        "detail": [
+          {
+            "loc": [
+              "body",
+              "items"
+            ],
+            "msg": "Expected `array` of length >= 1",
+            "type": "validation_error"
+          }
+        ]
+      }
+    }
+  ],
+  "appliances": [
+    {
+      "id": 13,
+      "name": "Air Conditioner (AC)"
+    },
+    {
+      "id": 33,
+      "name": "Air Fryer"
+    },
+    {
+      "id": 50,
+      "name": "Aquarium Pump"
+    },
+    {
+      "id": 48,
+      "name": "CCTV Recorder (DVR/NVR)"
+    },
+    {
+      "id": 26,
+      "name": "Ceiling Fan"
+    },
+    {
+      "id": 28,
+      "name": "Chest Freezer"
+    },
+    {
+      "id": 39,
+      "name": "Clothes Dryer"
+    },
+    {
+      "id": 36,
+      "name": "Coffee Maker"
+    },
+    {
+      "id": 46,
+      "name": "Computer Monitor"
+    },
+    {
+      "id": 10,
+      "name": "Desktop Computer"
+    },
+    {
+      "id": 38,
+      "name": "Dishwasher"
+    },
+    {
+      "id": 20,
+      "name": "Electric Blender"
+    },
+    {
+      "id": 34,
+      "name": "Electric Cooker"
+    },
+    {
+      "id": 49,
+      "name": "Electric Fence"
+    },
+    {
+      "id": 31,
+      "name": "Electric Iron"
+    },
+    {
+      "id": 21,
+      "name": "Electric Kettle"
+    },
+    {
+      "id": 25,
+      "name": "Electric shaver"
+    },
+    {
+      "id": 9,
+      "name": "Fan"
+    },
+    {
+      "id": 3,
+      "name": "Fridge"
+    },
+    {
+      "id": 16,
+      "name": "Gaming Console"
+    },
+    {
+      "id": 41,
+      "name": "Hair Dryer"
+    },
+    {
+      "id": 17,
+      "name": "Home Theater"
+    },
+    {
+      "id": 35,
+      "name": "Induction Cooker"
+    },
+    {
+      "id": 11,
+      "name": "Laptop"
+    },
+    {
+      "id": 8,
+      "name": "LED Light"
+    },
+    {
+      "id": 5,
+      "name": "Microwave Oven"
+    },
+    {
+      "id": 23,
+      "name": "Phone"
+    },
+    {
+      "id": 2,
+      "name": "Phone Charger"
+    },
+    {
+      "id": 22,
+      "name": "Printer"
+    },
+    {
+      "id": 45,
+      "name": "Projector"
+    },
+    {
+      "id": 18,
+      "name": "Radio"
+    },
+    {
+      "id": 12,
+      "name": "Refrigerator"
+    },
+    {
+      "id": 32,
+      "name": "Rice Cooker"
+    },
+    {
+      "id": 37,
+      "name": "Sandwich Maker"
+    },
+    {
+      "id": 43,
+      "name": "Satellite Decoder"
+    },
+    {
+      "id": 24,
+      "name": "Security Cameras"
+    },
+    {
+      "id": 47,
+      "name": "Smart Speaker"
+    },
+    {
+      "id": 44,
+      "name": "Sound System"
+    },
+    {
+      "id": 27,
+      "name": "Standing Fan"
+    },
+    {
+      "id": 14,
+      "name": "Toaster"
+    },
+    {
+      "id": 7,
+      "name": "Tube Light"
+    },
+    {
+      "id": 6,
+      "name": "Tungsten Bulb"
+    },
+    {
+      "id": 4,
+      "name": "TV"
+    },
+    {
+      "id": 42,
+      "name": "Vacuum Cleaner"
+    },
+    {
+      "id": 15,
+      "name": "Washing Machine"
+    },
+    {
+      "id": 29,
+      "name": "Water Dispenser"
+    },
+    {
+      "id": 40,
+      "name": "Water Heater"
+    },
+    {
+      "id": 30,
+      "name": "Water Pump"
+    },
+    {
+      "id": 1,
+      "name": "Wifi Router"
+    },
+    {
+      "id": 19,
+      "name": "Wifi-Router"
+    }
+  ]
+}
