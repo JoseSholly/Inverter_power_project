@@ -15,6 +15,7 @@ Apart from how energy demand is worked out, both versions use the **same sizing 
 - [Setup](#setup)
 - [API Documentation](#api-documentation)
 - [Endpoints](#endpoints)
+- [Rate limiting](#rate-limiting)
 - [Request Fields](#request-fields)
 - [Examples](#examples)
 - [Calculation Formulas](#calculation-formulas)
@@ -114,6 +115,9 @@ CSRF_TRUSTED_ORIGINS=http://localhost:3000
 | `VOLTAGE_12V_MAX_KVA` | no | Largest inverter (kVA) that still suits a 12 V system (default `1.0`) |
 | `VOLTAGE_24V_MAX_KVA` | no | Largest inverter (kVA) that still suits a 24 V system (default `3.0`); above it 48 V is recommended |
 | `MAX_PARALLEL_STRINGS` | no | Parallel battery strings allowed before a warning (default `3`) |
+| `RATE_LIMIT_RPS` | no | Average requests per second allowed per client IP (default `5`); `0` turns the limit off |
+| `RATE_LIMIT_BURST` | no | Requests a client may send at once before being limited (default `20`) |
+| `BOLT_TRUSTED_PROXIES` | no | Production only. Comma-separated proxy IPs/CIDRs whose `X-Forwarded-For` is trusted (default: private and loopback ranges). See [Rate limiting](#rate-limiting) |
 
 ### 4. Create the database and load appliances
 ```bash
@@ -206,6 +210,7 @@ Every error comes back as JSON with a `detail` key. Nothing internal (stack trac
 | **422** | The body isn't valid JSON, isn't an object, or is empty | `{"detail": [{"type": "json_invalid", "loc": ["body"], "msg": "Input data was truncated", ...}]}` |
 | **422** | A field is missing, has the wrong type, or is out of range | see below |
 | **422** | An appliance ID doesn't exist | see below |
+| **429** | Too many requests from one IP (see [Rate limiting](#rate-limiting)) | `{"detail": "Rate limit exceeded. Try again in 1 seconds.", "retry_after": 1}` with a `Retry-After` header |
 | **405** | Wrong HTTP method on a known endpoint (e.g. `GET /calculate/`) | `{"detail": "Method not allowed. Allowed methods: OPTIONS, POST."}` with an `Allow` header |
 | **404** | Unknown URL | `{"detail": "Not Found"}` |
 | **500** | An unexpected server fault (e.g. the database is down) | `{"detail": "Internal Server Error"}` |
@@ -249,6 +254,14 @@ An appliance ID that isn't in the database gets one error per offending item:
 | `system_voltage` (v2) | 12–240 V, multiple of 12 |
 | `battery_capacity` (v2) | up to 5,000 Ah |
 | `solar_panel_watt` (v2) | up to 1,000 W |
+
+## Rate limiting
+Every endpoint is limited per client IP with a token bucket (django-bolt's built-in limiter, no extra service): **5 requests per second on average, bursts of up to 20**. Normal use from a browser never gets near this. Over the limit, the API answers **429** with a `Retry-After` header (seconds) and `X-RateLimit-Limit` / `X-RateLimit-Burst` headers. A frontend should wait `retry_after` seconds and try again.
+
+- **Tune or disable:** `RATE_LIMIT_RPS` and `RATE_LIMIT_BURST`. `RATE_LIMIT_RPS=0` switches it off, e.g. for load tests. The benchmark tool does this for you.
+- **Behind a proxy (Render, etc.):** the limiter sees the proxy's address, not the visitor's, so without help every visitor would share one bucket. In production `BOLT_TRUSTED_PROXIES` defaults to private and loopback ranges, so the real client IP is read from `X-Forwarded-For`. If your host's proxy connects from a public address, set `BOLT_TRUSTED_PROXIES` to it.
+- **Calls from a server, not a browser:** if the frontend calls the API from its own server (for example Next.js server-side code on Vercel), all its users arrive from that server's IP and share one bucket. Call the API from the browser, or raise the limits.
+- Counters live in each server process's memory, so with several processes the real limit is roughly the setting times the number of processes. That is fine for protecting a small API; it is not a billing-grade quota.
 
 ## Request Fields
 
@@ -753,4 +766,5 @@ docker push <user>/inverter-power:latest
 - The wrong HTTP method still returns **405** with an `Allow` header, as with DRF. Paths now also work **without the trailing slash**: DRF redirected them (301), and a POST was then lost.
 - New: `?name=` filter on the appliance endpoints, a Redis-backed appliance cache with automatic invalidation, and ETag/304 support.
 - The unknown-appliance error points at the exact item (`loc: ["body", "items", "<index>", "id"]`).
+- New: per-IP rate limiting on every endpoint (429 with `Retry-After`), configurable with `RATE_LIMIT_RPS` / `RATE_LIMIT_BURST`.
 - API docs moved to `/api/docs`. Dependencies are managed with uv. Python 3.12+ and Django 5.2 are required.

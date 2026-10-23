@@ -21,6 +21,15 @@ DATABASES = {
 # "InterfaceError: connection already closed" on the next query.
 BOLT_EMIT_SIGNALS = True
 
+# The rate limiter keys on the client IP. Behind a reverse proxy every request
+# arrives from the proxy, so list it here and django-bolt reads the real client
+# from X-Forwarded-For instead; otherwise all visitors share one bucket.
+# Default: private/loopback ranges, which is where hosted proxies connect from.
+BOLT_TRUSTED_PROXIES = env_list(
+    "BOLT_TRUSTED_PROXIES",
+    default="10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.0/8,fc00::/7",
+)
+
 REDIS_URL = config("REDIS_URL", default="")
 if REDIS_URL:
     CACHES = {

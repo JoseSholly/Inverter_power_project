@@ -4,13 +4,16 @@ Imported as DJANGO_SETTINGS_MODULE=bench_settings with this directory on
 PYTHONPATH, so every build (old DRF and Bolt) runs with DEBUG off, quiet
 logging and its own SQLite database (BENCH_DB).
 """
+
 import os
 
-from inverter_project.settings.dev import *  # noqa: F401,F403
+from inverter_project.settings.dev import *
 
 DEBUG = False
 ALLOWED_HOSTS = ["*"]
-DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": os.environ["BENCH_DB"]}}
+DATABASES = {
+    "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": os.environ["BENCH_DB"]}
+}
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

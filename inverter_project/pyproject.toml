@@ -26,3 +26,7 @@ package = false
 
 [tool.ruff]
 exclude = ["**/migrations/*"]
+
+[tool.ruff.lint]
+# Ruff's default rules plus import sorting (isort).
+extend-select = ["I"]

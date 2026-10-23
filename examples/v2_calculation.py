@@ -1,5 +1,6 @@
-import requests
 import json
+
+import requests
 
 url = "http://127.0.0.1:8000/api/v2/power_calculator/calculate/"
 
@@ -8,30 +9,13 @@ payload = {
     "battery_capacity": 200.0,
     "solar_panel_watt": 350.0,
     "items": [
-      {
-        "id": 1,
-        "quantity": 1,
-        "power_rating": 75.0,
-        "backup_time": 5.0
-      },
-      {
-        "id": 2,
-        "quantity": 1,
-        "power_rating": 120.0,
-        "backup_time": 4.0
-      },
-      {
-        "id": 3,
-        "quantity": 8,
-        "power_rating": 7.0,
-        "backup_time": 7.0
-      }
-    ]
-  }
-
-headers = {
-    "Content-Type": "application/json"
+        {"id": 1, "quantity": 1, "power_rating": 75.0, "backup_time": 5.0},
+        {"id": 2, "quantity": 1, "power_rating": 120.0, "backup_time": 4.0},
+        {"id": 3, "quantity": 8, "power_rating": 7.0, "backup_time": 7.0},
+    ],
 }
+
+headers = {"Content-Type": "application/json"}
 
 try:
     response = requests.post(url, data=json.dumps(payload), headers=headers)
@@ -43,5 +27,5 @@ try:
 
 except requests.exceptions.RequestException as e:
     print(f"An error occurred: {e}")
-    if hasattr(e, 'response') and e.response is not None:
+    if hasattr(e, "response") and e.response is not None:
         print("Response Content:", e.response.text)

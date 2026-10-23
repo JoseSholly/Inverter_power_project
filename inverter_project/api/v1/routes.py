@@ -13,6 +13,7 @@ from api.common.appliance_endpoint import (
 )
 from api.common.errors import unknown_appliance_to_validation_error
 from api.common.exceptions import UnknownApplianceError
+from api.common.rate_limit import limited
 from api.common.routing import Routes
 from api.common.schemas import ApplianceOut, WarningOut
 
@@ -24,6 +25,7 @@ calculation_service = V1CalculationService()
 
 
 @routes.get("/appliances/", name="v1-appliances", response_model=list[ApplianceOut])
+@limited
 async def v1_appliances(
     name: Annotated[str | None, Query(description=NAME_FILTER_DESCRIPTION)] = None,
     if_none_match: Annotated[str | None, Header(alias="If-None-Match")] = None,
@@ -33,6 +35,7 @@ async def v1_appliances(
 
 
 @routes.post("/calculate/", name="v1-calculate", status_code=200)
+@limited
 async def v1_calculate(data: V1CalculationIn) -> V1CalculationOut:
     """
     Size an inverter, battery bank and solar array for a list of appliances.

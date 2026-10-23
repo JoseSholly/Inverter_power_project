@@ -97,6 +97,7 @@ CACHES = {
     }
 }
 APPLIANCE_CACHE_TIMEOUT = config("APPLIANCE_CACHE_TIMEOUT", default=3600, cast=int)
+"""Seconds a cached appliance catalogue lives; a safety net, since changes invalidate it."""
 
 # System-voltage advice: largest inverter (kVA) that still suits 12V / 24V; above
 # the 24V limit 48V is recommended. More parallel battery strings than
@@ -104,7 +105,11 @@ APPLIANCE_CACHE_TIMEOUT = config("APPLIANCE_CACHE_TIMEOUT", default=3600, cast=i
 VOLTAGE_12V_MAX_KVA = config("VOLTAGE_12V_MAX_KVA", default=1.0, cast=float)
 VOLTAGE_24V_MAX_KVA = config("VOLTAGE_24V_MAX_KVA", default=3.0, cast=float)
 MAX_PARALLEL_STRINGS = config("MAX_PARALLEL_STRINGS", default=3, cast=int)
-"""Seconds a cached appliance catalogue lives; a safety net, since changes invalidate it."""
+
+# Per-IP rate limit on every endpoint (0 turns it off). Average requests per
+# second, and how many may arrive at once before 429s start.
+RATE_LIMIT_RPS = config("RATE_LIMIT_RPS", default=5, cast=int)
+RATE_LIMIT_BURST = config("RATE_LIMIT_BURST", default=20, cast=int)
 
 # Isolates tests from each other's cache entries (see inverter_project/test_runner.py).
 TEST_RUNNER = "inverter_project.test_runner.CacheIsolatingTestRunner"
